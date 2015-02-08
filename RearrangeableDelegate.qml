@@ -327,12 +327,7 @@ Rectangle {
                 isOnTopOf = -1;
 
                 // Check if the position is on top of an item that could produce subchildren.
-                if (isInMiddle) {
-                    // Folders cannot be dragged around this way.
-                    if (isFolder) {
-                        return;
-                    }
-
+                if (isInMiddle && !isFolder) {
                     // Math: This is a tweaked version of spacesMoved (see above)
                     var currentSpace = index + Math.floor((positionEnded - positionStarted +
                         (movingUp ? -(rearrangeableDelegate.height / 2) : (rearrangeableDelegate.height / 2)))
