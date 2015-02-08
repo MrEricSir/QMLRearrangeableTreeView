@@ -384,10 +384,24 @@ Rectangle {
                     if (spacesMoved > 0) {
                         // Special case for last time: don't draw a bottom drag border -- ever.
                         if (index !== model.count - 1) {
-                            drawDnDBorders(newPosition, "bottom");
+                            var pos = newPosition;
+
+                            // If we're in a closed folder, skip back up to the folder itself because
+                            // we can't draw a border on an invisible item.
+                            if (!model.get(pos).folderOpen) {
+                                for (pos; pos >= 0; pos--) {
+                                    if (model.get(pos).isFolder) {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            drawDnDBorders(pos, "bottom");
                         }
                     } else {
-                        drawDnDBorders(newPosition, "top");
+                        if (index != newPosition) {
+                            drawDnDBorders(newPosition, "top");
+                        }
                     }
                 }
             }
