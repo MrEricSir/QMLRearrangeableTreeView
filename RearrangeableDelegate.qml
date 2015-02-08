@@ -411,7 +411,7 @@ Rectangle {
                     var myNewPosition;
                     if (isOnTopOf == -1) {
                         // Drag between two items (or drop back where we started if we haven't moved.)
-                        myNewPosition = positionEnded == 0 ? index : newPosition;
+                        myNewPosition = (positionEnded == 0 && mouse.y >= 0) ? index : newPosition;
                     } else {
                         // Drag on top of another item.
                         myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
