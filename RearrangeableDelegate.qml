@@ -39,14 +39,18 @@ Rectangle {
 
     color: "transparent";
 
+    // So we don't have to keep typing this out.
+    // Note: For some reason delegate properies can't be aliased, so we use a var here.
+    property var model: ListView.view.model;
+
     function setMyProperty(myIndex, name, value) {
         //
         // Note: In C++ the method is "setData", but it's called "setProperty" with a QML ListModel.
         //
         if (qmlListModel) {
-            rearrangeableDelegate.ListView.view.model.setProperty(myIndex, name, value);
+            model.setProperty(myIndex, name, value);
         } else {
-            rearrangeableDelegate.ListView.view.model.setData(myIndex, name, value);
+            model.setData(myIndex, name, value);
         }
     }
 
@@ -56,9 +60,9 @@ Rectangle {
         //       model you don't need it..
         //
         if (qmlListModel) {
-            rearrangeableDelegate.ListView.view.model.move(oldPosition, newPosition, 1);
+            model.move(oldPosition, newPosition, 1);
         } else {
-            rearrangeableDelegate.ListView.view.model.move(oldPosition, newPosition);
+            model.move(oldPosition, newPosition);
         }
     }
 
@@ -75,7 +79,7 @@ Rectangle {
 
     // Makes all the drag borders from a DND job go away.
     function removeDragBorders() {
-        for (var i = 0; i < rearrangeableDelegate.ListView.view.model.count; i++) {
+        for (var i = 0; i < model.count; i++) {
             drawDnDBorders(i, "none");
         }
     }
@@ -86,14 +90,14 @@ Rectangle {
         var uid = app.uidNext();
 
         // Create our new folder.
-        rearrangeableDelegate.ListView.view.model.insert(firstItemIndex, {
-                                                          "uid": uid,
-                                                          "name": "New folder",
-                                                          "dropTarget":"none",
-                                                          "isFolder":true,
-                                                          "parentFolder":-1,
-                                                          "folderOpen": true
-                                                      });
+        model.insert(firstItemIndex, {
+                         "uid": uid,
+                         "name": "New folder",
+                         "dropTarget":"none",
+                         "isFolder":true,
+                         "parentFolder":-1,
+                         "folderOpen": true
+                     });
 
         // Consume next two items by poppin' em out!
         for (var i = 1; i < 3; i++) {
@@ -104,20 +108,19 @@ Rectangle {
     // If you drag everything out of a folder, we delete it.
     // (my pary are with the father who lost his chrilden)
     function clearEmptyFolders() {
-        var listModel = rearrangeableDelegate.ListView.view.model;
-        for (var i = 0; i < listModel.count; i++) {
-            var item = listModel.get(i);
+        for (var i = 0; i < model.count; i++) {
+            var item = model.get(i);
             if (item.isFolder) {
                 // Get UID of current folder.
-                var uid = rearrangeableDelegate.ListView.view.model.get(i).uid;
+                var uid = model.get(i).uid;
 
-                var nextItem = i === listModel.count -1 ? null : listModel.get(i + 1);
+                var nextItem = i === model.count -1 ? null : model.get(i + 1);
 
                 // If there's no next item or it's got a different UID for its parent,
                 // the folder is empty and therefore safe to remove.
                 if (nextItem === null || nextItem.parentFolder !== uid) {
                     console.log('deleting folder')
-                    listModel.remove(i, 1);
+                    model.remove(i, 1);
                     if (i > 0) {
                         i--; // Back up one.
                     }
@@ -178,6 +181,52 @@ Rectangle {
             // True if we're moving upwardly.
             property bool movingUp: positionEnded < positionStarted;
 
+            // Returns an adjusted index that skips over closed folders.
+            function folderSkipIndex(newIndex) {
+                if (!model) {
+                    return 0; // Haven't fully initialized yet!
+                }
+
+                // Start with the basic case.
+                var position = clipPosition(newIndex);
+
+                var add = 0;
+                var i = index;
+                var item;
+
+                // Skip items in closed folders.
+                if (movingUp) {
+                    // We're moving up.
+                    while (i >= 0) {
+                        item = model.get(i);
+                        if (!item.folderOpen && !item.isFolder) {
+                            // Skip anything inside a closed folder.
+                            add -= 1;
+                        } else if (i <= position && item.folderOpen) {
+                            break;
+                        }
+
+                        i--;
+                    }
+                } else {
+                    // We're moving down.
+                    while (i < model.count) {
+                        item = model.get(i);
+                        if (!item.folderOpen && !item.isFolder) {
+                            // Skip anything inside a closed folder.
+                            add += 1;
+                        } else if (i >= position && item.folderOpen) {
+                            break;
+                        }
+
+                        i++;
+                    }
+                }
+
+                // We're done!
+                return clipPosition(position + add);
+            }
+
             // Number of spaces moved up/down the list (negative is up, pos is down)
             //
             // Maths: The gist of this calculation is we take the difference in layout pixels,
@@ -186,8 +235,8 @@ Rectangle {
                                                   (movingUp ? rearrangeableDelegate.height : 0))
                                                   / rearrangeableDelegate.height);
 
-            // New index (within range)
-            property int newPosition: clipPosition(index + spacesMoved);
+            // New index, used for in-between positions.
+            property int newPosition: folderSkipIndex(index + spacesMoved);
 
             // Cursor's position (positionEnded) mod'd to the delegate height.
             property real cursorModHeight: (positionEnded + (rearrangeableDelegate.height / 2)) % rearrangeableDelegate.height;
@@ -243,7 +292,7 @@ Rectangle {
                 positionEnded = rearrangeableDelegate.y;
 
                 //console.log("Height of list: ", dragDelegateBorder.ListView.view.childrenRect.height)
-                console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
+                //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
 
                 // Erase all existing drag borders.
                 removeDragBorders();
@@ -277,9 +326,12 @@ Rectangle {
                         return;
                     }
 
+                    // Adjust for closed folders.
+                    currentSpace = folderSkipIndex(currentSpace);
+
                     // We're only doing folders one level deep (for now?) so you can't drop on top
                     // of an item that's in a folder.
-                    if (rearrangeableDelegate.ListView.view.model.get(currentSpace).parentFolder >= 0) {
+                    if (model.get(currentSpace).parentFolder >= 0) {
                         return;
                     }
 
@@ -289,7 +341,7 @@ Rectangle {
                     isOnTopOf = currentSpace;
 
                     // Do a hover roll (unless we're on a folder.)
-                    if (!rearrangeableDelegate.ListView.view.model.get(currentSpace).isFolder) {
+                    if (!model.get(currentSpace).isFolder) {
                         drawDnDBorders(currentSpace, "hover");
                     }
 
@@ -302,10 +354,10 @@ Rectangle {
                 }
 
                 // Draw our new border, either on the top or bottom.
-                if (newPosition < rearrangeableDelegate.ListView.view.count) {
+                if (newPosition < model.count) {
                     if (spacesMoved > 0) {
                         // Special case for last time: don't draw a bottom drag border -- ever.
-                        if (index !== rearrangeableDelegate.ListView.view.count - 1) {
+                        if (index !== model.count - 1) {
                             drawDnDBorders(newPosition, "bottom");
                         }
                     } else {
@@ -334,18 +386,13 @@ Rectangle {
                     if (isOnTopOf == -1) {
                         // Drag between two items (or drop back where we started if we haven't moved.)
                         myNewPosition = positionEnded == 0 ? index : newPosition;
-                        if (positionEnded == 0) {
-                            console.log("You haven't moved, numb nuts.")
-                            console.log("(and yes, your nuts really are numb)")
-
-                        }
                     } else {
                         // Drag on top of another item.
                         myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
                     }
 
                     // Only move between valid targets.
-                    var itemAboveNewPos = rearrangeableDelegate.ListView.view.model.get(movingUp ? myNewPosition - 1 : myNewPosition);
+                    var itemAboveNewPos = model.get(movingUp ? myNewPosition - 1 : myNewPosition);
                     if ((myNewPosition === index) ||
                             /////////////////////////////////////////////////
                             /////////////////////////////////////////////////
@@ -365,9 +412,12 @@ Rectangle {
                     if (isOnTopOf !== -1 && !isFolder) {
                         // We're on top of another item.
                         console.log("You dropped it in the middle, dawg: ", isOnTopOf)
-                        var onTopOfItem = rearrangeableDelegate.ListView.view.model.get(isOnTopOf);
+                        var onTopOfItem = model.get(isOnTopOf);
 
-                        if (onTopOfItem.isFolder) {
+                        if (onTopOfItem.isFolder && !onTopOfItem.folderOpen) {
+                            // We're on top of a closed folder.  This is a no-op because we
+                            // don't allow dragging into a closed folder.
+                        } else if (onTopOfItem.isFolder) {
                              // If we're dropped on top of a folder, add ourselves to the folder.
                             console.log("dropped on a folder")
 
@@ -389,16 +439,16 @@ Rectangle {
                             // noop: We didn't move! Don't do anything.
                         } else if (spacesMoved < 0) {
                             // Move children UP.
-                            for (var i = 0; i < rearrangeableDelegate.ListView.view.model.count; i++) {
-                                var item = rearrangeableDelegate.ListView.view.model.get(i);
+                            for (var i = 0; i < model.count; i++) {
+                                var item = model.get(i);
                                 if (item.parentFolder === uid) {
                                     moveFromTo(i, i + spacesMoved);
                                 }
                             }
                         } else {
                             // Move children DOWN.
-                            for (var i = rearrangeableDelegate.ListView.view.model.count - 1; i > 0 ; i--) {
-                                var item2 = rearrangeableDelegate.ListView.view.model.get(i);
+                            for (var i = model.count - 1; i > 0 ; i--) {
+                                var item2 = model.get(i);
                                 if (item2.parentFolder === uid) {
                                     moveFromTo(i, i + spacesMoved - 1);
                                     //i++;
@@ -406,10 +456,22 @@ Rectangle {
                             }
                         }
                     } else {
-                        // We're between two items.  If the item above is a folder, reparent.
-                        // Otherwise, set our parent to the same parent as the item above.
-                        var aboveItem = rearrangeableDelegate.ListView.view.model.get(index - 1);
-                        var parentFolderUID = aboveItem.isFolder ? aboveItem.uid : aboveItem.parentFolder;
+                        // We're between two items.  Adjust our parent folder accordingly.
+                        var aboveItem = model.get(index - 1);
+                        var parentFolderUID;
+
+                        if (!aboveItem.folderOpen) {
+                            // If the item above is closed, ignore it and make this a root
+                            // level item.
+                            parentFolderUID = -1;
+                        } else if (aboveItem.isFolder) {
+                            // If the item above is a folder, reparent.
+                            parentFolderUID = aboveItem.uid;
+                        } else {
+                            // Otherwise, set our parent to the same parent as the item above.
+                            parentFolderUID = aboveItem.parentFolder;
+                        }
+
                         setMyProperty(index, "parentFolder", parentFolderUID);
                     }
 
