@@ -224,7 +224,7 @@ Rectangle {
                 }
 
                 // We're done!
-                return clipPosition(position + add);
+                return position + add;
             }
 
             // Number of spaces moved up/down the list (negative is up, pos is down)
@@ -236,14 +236,40 @@ Rectangle {
                                                   / rearrangeableDelegate.height);
 
             // New index, used for in-between positions.
-            property int newPosition: folderSkipIndex(index + spacesMoved);
+            property int newPosition: clipPosition(folderSkipIndex(index + spacesMoved));
 
             // Cursor's position (positionEnded) mod'd to the delegate height.
             property real cursorModHeight: (positionEnded + (rearrangeableDelegate.height / 2)) % rearrangeableDelegate.height;
 
             // True if the drag border is in the middle of the current item.
-            property bool isInMiddle: (cursorModHeight > rearrangeableDelegate.height / 4.0) &&
-                                      (cursorModHeight < rearrangeableDelegate.height - (rearrangeableDelegate.height / 4.0));
+            // Will be set to false if we're out of range.
+            property bool isInMiddle: {
+                if (!model) {
+                    return false;
+                }
+
+                // Out of range (lower)
+                if (newPosition <= numSpecial) {
+                    return false;
+                }
+
+                var max = 0;
+                for (var i = 0; i < model.count; i++) {
+                    var item = model.get(i);
+                    if (item.isFolder || item.folderOpen) {
+                        max++;
+                    }
+                }
+
+                // Out of range (higher.)
+                if (newPosition + 1 >= max) {
+                    return false;
+                }
+
+                // Check if we're in the middle of something.
+                return (cursorModHeight > rearrangeableDelegate.height / 4.0) &&
+                       (cursorModHeight < rearrangeableDelegate.height - (rearrangeableDelegate.height / 4.0));
+            }
 
             // If we're on top of a space, this is set to that space.  It's a rather complex
             // calculation that occurs below in the drag handler.
@@ -316,11 +342,6 @@ Rectangle {
                         currentSpace += 1;
                     }
 
-                    // If we're outside the bounds, this check will fail and we can stop now.
-                    if (currentSpace !== clipPosition(currentSpace)) {
-                        return;
-                    }
-
                     // Same space we started on? Early exit.
                     if (currentSpace === index) {
                         return;
@@ -328,6 +349,11 @@ Rectangle {
 
                     // Adjust for closed folders.
                     currentSpace = folderSkipIndex(currentSpace);
+
+                    // If we're outside the bounds, this check will fail and we can stop now.
+                    if (currentSpace !== clipPosition(currentSpace)) {
+                        return;
+                    }
 
                     // We're only doing folders one level deep (for now?) so you can't drop on top
                     // of an item that's in a folder.
