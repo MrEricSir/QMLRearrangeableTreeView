@@ -147,7 +147,7 @@ ApplicationWindow {
                 Text {
                     id: itemName;
 
-                    text: name;
+                    text: name + (index < titleDelegate.numSpecial ? " [special]" : "");
 
                     width: 200
                     height: 30
@@ -200,7 +200,7 @@ ApplicationWindow {
             id: sampleList
 
             ListElement {
-                name: "one [special]";
+                name: "one";
 
                 // Required:
                 uid: 1;              // Unique id (integer)
@@ -211,7 +211,7 @@ ApplicationWindow {
                                      // displayed. For folders, whether they are open or closed.
             }
             ListElement {
-                name: "two [special]";
+                name: "two";
 
                 uid: 2;
                 dropTarget: "none";
