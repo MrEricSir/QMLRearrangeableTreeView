@@ -135,6 +135,14 @@ Rectangle {
         return Math.max(numSpecial, Math.min(rearrangeableDelegate.ListView.view.count - 1, index));
     }
 
+    // (Debug feature) Logs the current model to the console.
+    function logModel() {
+        for (var i = 0; i < model.count; i++) {
+            var item = model.get(i);
+            console.log(i, ". ", item.uid, " ", item.name, item.folderOpen ? " " : " [closed] ", item.parentFolder)
+        }
+    }
+
     Rectangle {
         color: "transparent";
         anchors.fill: parent;
@@ -426,6 +434,10 @@ Rectangle {
                         myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
                     }
 
+                    // Assuming this is a move, this represents the number of spaces we actually
+                    // moved when all was said and done.
+                    var spacesActuallyMoved = -1;
+
                     // Only move between valid targets.
                     var itemAboveNewPos = model.get(movingUp ? myNewPosition - 1 : myNewPosition);
                     if ((myNewPosition === index) ||
@@ -439,6 +451,7 @@ Rectangle {
                         rearrangeableDelegate.y = positionStarted;
                     } else {
                         // Do the move!
+                        spacesActuallyMoved = myNewPosition - index;
                         moveTo(myNewPosition);
                         weMoved = true; // remember
                     }
@@ -470,23 +483,34 @@ Rectangle {
                         }
                     } else if (isFolder) {
                         // I am a folder! Drag my children too!
+                        var item, i;
+
                         if (!weMoved) {
                             // noop: We didn't move! Don't do anything.
                         } else if (spacesMoved < 0) {
                             // Move children UP.
-                            for (var i = 0; i < model.count; i++) {
-                                var item = model.get(i);
+                            for (i = 0; i < model.count; i++) {
+                                item = model.get(i);
                                 if (item.parentFolder === uid) {
-                                    moveFromTo(i, i + spacesMoved);
+                                    moveFromTo(i, clipPosition(i + spacesActuallyMoved));
                                 }
                             }
                         } else {
                             // Move children DOWN.
-                            for (var i = model.count - 1; i > 0 ; i--) {
-                                var item2 = model.get(i);
-                                if (item2.parentFolder === uid) {
-                                    moveFromTo(i, i + spacesMoved - 1);
-                                    //i++;
+                            // 1. Count the number of items in the folder.
+                            var itemsInFolder = 0;
+                            for (i = 0; i < model.count; i++) {
+                                item = model.get(i);
+                                if (item.parentFolder === uid) {
+                                    itemsInFolder++;
+                                }
+                            }
+
+                            // 2. Perform the move.
+                            for (i = model.count - 1; i > 0 ; i--) {
+                                item = model.get(i);
+                                if (item.parentFolder === uid) {
+                                    moveFromTo(i, clipPosition(i + spacesActuallyMoved - (itemsInFolder - 1)));
                                 }
                             }
                         }
