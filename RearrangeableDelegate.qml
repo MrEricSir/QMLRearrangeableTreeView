@@ -256,8 +256,8 @@ Rectangle {
                     return false;
                 }
 
-                // Out of range (lower)
-                if (newPosition <= numSpecial) {
+                // Out of range (upper)
+                if (positionEnded <= 0 || newPosition <= numSpecial) {
                     return false;
                 }
 
@@ -325,6 +325,9 @@ Rectangle {
 
                 positionEnded = rearrangeableDelegate.y;
 
+                // Special handling if we're at the top.
+                var atTop = positionEnded <= 0;
+
                 //console.log("Height of list: ", dragDelegateBorder.ListView.view.childrenRect.height)
                 //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
 
@@ -335,7 +338,7 @@ Rectangle {
                 isOnTopOf = -1;
 
                 // Check if the position is on top of an item that could produce subchildren.
-                if (isInMiddle && !isFolder) {
+                if (isInMiddle && !isFolder && !atTop) {
                     // Math: This is a tweaked version of spacesMoved (see above)
                     var currentSpace = index + Math.floor((positionEnded - positionStarted +
                         (movingUp ? -(rearrangeableDelegate.height / 2) : (rearrangeableDelegate.height / 2)))
@@ -377,14 +380,14 @@ Rectangle {
                     return;
                 }
 
-                if (spacesMoved === 0) {
+                if (spacesMoved === 0 && !atTop) {
                     // Nothing to draw!
                     return;
                 }
 
                 // Draw our new border, either on the top or bottom.
                 if (newPosition < model.count) {
-                    if (spacesMoved > 0) {
+                    if (spacesMoved > 0 && positionEnded > 0 && !atTop) {
                         // Special case for last time: don't draw a bottom drag border -- ever.
                         if (index !== model.count - 1) {
                             var pos = newPosition;
@@ -401,7 +404,12 @@ Rectangle {
 
                             drawDnDBorders(pos, "bottom");
                         }
+                    } else if (atTop && index != 0) {
+                        // Special handling for top item.
+                        drawDnDBorders(0, "top");
                     } else {
+                        // Otherwise, just check if it's a different space and draw the
+                        // stupid border.
                         if (index != newPosition) {
                             drawDnDBorders(newPosition, "top");
                         }
@@ -428,7 +436,17 @@ Rectangle {
                     var myNewPosition;
                     if (isOnTopOf == -1) {
                         // Drag between two items (or drop back where we started if we haven't moved.)
-                        myNewPosition = (positionEnded == 0 && mouse.y >= 0) ? index : newPosition;
+                        if (positionEnded == 0 && mouse.y >= 0) {
+                            // We didn't move.
+                            myNewPosition = index;
+                        } else {
+                            // We moved!
+                            myNewPosition = newPosition;
+                            if (positionEnded <= 0) {
+                                // Special case for top item.
+                                myNewPosition = 0;
+                            }
+                        }
                     } else {
                         // Drag on top of another item.
                         myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
@@ -516,22 +534,24 @@ Rectangle {
                         }
                     } else {
                         // We're between two items.  Adjust our parent folder accordingly.
-                        var aboveItem = model.get(index - 1);
-                        var parentFolderUID;
+                        if (index > 0) {
+                            var aboveItem = model.get(index - 1);
+                            var parentFolderUID;
 
-                        if (!aboveItem.folderOpen) {
-                            // If the item above is closed, ignore it and make this a root
-                            // level item.
-                            parentFolderUID = -1;
-                        } else if (aboveItem.isFolder) {
-                            // If the item above is a folder, reparent.
-                            parentFolderUID = aboveItem.uid;
-                        } else {
-                            // Otherwise, set our parent to the same parent as the item above.
-                            parentFolderUID = aboveItem.parentFolder;
+                            if (!aboveItem.folderOpen) {
+                                // If the item above is closed, ignore it and make this a root
+                                // level item.
+                                parentFolderUID = -1;
+                            } else if (aboveItem.isFolder) {
+                                // If the item above is a folder, reparent.
+                                parentFolderUID = aboveItem.uid;
+                            } else {
+                                // Otherwise, set our parent to the same parent as the item above.
+                                parentFolderUID = aboveItem.parentFolder;
+                            }
+
+                            setMyProperty(index, "parentFolder", parentFolderUID);
                         }
-
-                        setMyProperty(index, "parentFolder", parentFolderUID);
                     }
 
                     // If any folders are empty, delete 'em.
