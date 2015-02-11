@@ -257,7 +257,7 @@ Rectangle {
                 }
 
                 // Out of range (upper)
-                if (positionEnded <= 0 || newPosition <= numSpecial) {
+                if ((positionEnded <= 0 && numSpecial == 0) || newPosition <= numSpecial) {
                     return false;
                 }
 
@@ -326,7 +326,7 @@ Rectangle {
                 positionEnded = rearrangeableDelegate.y;
 
                 // Special handling if we're at the top.
-                var atTop = positionEnded <= 0;
+                var atTop = numSpecial == 0 && positionEnded <= 0;
 
                 //console.log("Height of list: ", dragDelegateBorder.ListView.view.childrenRect.height)
                 //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
@@ -442,7 +442,7 @@ Rectangle {
                         } else {
                             // We moved!
                             myNewPosition = newPosition;
-                            if (positionEnded <= 0) {
+                            if (numSpecial == 0 && positionEnded <= 0) {
                                 // Special case for top item.
                                 myNewPosition = 0;
                             }
