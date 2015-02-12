@@ -362,11 +362,11 @@ Rectangle {
 
                     //console.log("Currently on top of space: ", currentSpace)
 
-                    // Set the on top of space.
-                    isOnTopOf = currentSpace;
-
                     // Do a hover roll (unless we're on a folder.)
                     if (!model.get(currentSpace).isFolder) {
+                        // Set the on top of space.
+                        isOnTopOf = currentSpace;
+
                         drawDnDBorders(currentSpace, "hover");
                     }
 
@@ -498,7 +498,7 @@ Rectangle {
 
                         if (!weMoved) {
                             // noop: We didn't move! Don't do anything.
-                        } else if (spacesMoved < 0) {
+                        } else if (spacesActuallyMoved < 0) {
                             // Move children UP.
                             for (i = 0; i < model.count; i++) {
                                 item = model.get(i);
