@@ -220,10 +220,10 @@ Rectangle {
                     // We're moving down.
                     while (i < model.count) {
                         item = model.get(i);
-                        if (!item.folderOpen && !item.isFolder) {
+                        if (item && !item.folderOpen && !item.isFolder) {
                             // Skip anything inside a closed folder.
                             add += 1;
-                        } else if (i >= position && item.folderOpen) {
+                        } else if (!item || (i >= position && item.folderOpen)) {
                             break;
                         }
 
@@ -256,21 +256,13 @@ Rectangle {
                     return false;
                 }
 
-                // Out of range (upper)
+                // Out of range (top)
                 if ((positionEnded <= 0 && numSpecial == 0) || newPosition <= numSpecial) {
                     return false;
                 }
 
-                var max = 0;
-                for (var i = 0; i < model.count; i++) {
-                    var item = model.get(i);
-                    if (item.isFolder || item.folderOpen) {
-                        max++;
-                    }
-                }
-
-                // Out of range (higher.)
-                if (newPosition + 1 >= max) {
+                // Out of range (bottom.)
+                if (newPosition + 1 >= model.count) {
                     return false;
                 }
 
@@ -339,25 +331,26 @@ Rectangle {
 
                 // Check if the position is on top of an item that could produce subchildren.
                 if (isInMiddle && !isFolder && !atTop) {
-                    // Math: This is a tweaked version of spacesMoved (see above)
+                    // Math(s): This is a tweaked version of index + spacesMoved (see above)
                     var currentSpace = index + Math.floor((positionEnded - positionStarted +
                         (movingUp ? -(rearrangeableDelegate.height / 2) : (rearrangeableDelegate.height / 2)))
-                        / rearrangeableDelegate.height);// + 1;
+                        / rearrangeableDelegate.height);
 
                     if (movingUp) {
                         currentSpace += 1;
                     }
+
+                    // Adjust for closed folders.
+                    currentSpace = folderSkipIndex(currentSpace);
 
                     // Same space we started on? Early exit.
                     if (currentSpace === index) {
                         return;
                     }
 
-                    // Adjust for closed folders.
-                    currentSpace = folderSkipIndex(currentSpace);
-
                     // If we're outside the bounds, this check will fail and we can stop now.
                     if (currentSpace !== clipPosition(currentSpace)) {
+                        console.log("ne clipped!")
                         return;
                     }
 
@@ -367,7 +360,7 @@ Rectangle {
                         return;
                     }
 
-                    console.log("Currently on top of space: ", currentSpace)
+                    //console.log("Currently on top of space: ", currentSpace)
 
                     // Set the on top of space.
                     isOnTopOf = currentSpace;
@@ -464,7 +457,7 @@ Rectangle {
                             // TODO: allow folder to be positioned after another folder at bottom
                             /////////////////////////////////////////////////
                             /////////////////////////////////////////////////
-                        (isFolder && (itemAboveNewPos.isFolder || itemAboveNewPos.parentFolder !== -1) ) ) {
+                        (isFolder && itemAboveNewPos && (itemAboveNewPos.isFolder || itemAboveNewPos.parentFolder !== -1) ) ) {
                         // We didn't move; snap the rectangle back in place.
                         rearrangeableDelegate.y = positionStarted;
                     } else {
