@@ -309,7 +309,6 @@ ApplicationWindow {
             height: parent.height;
         }
 
-
         SpinBox {
             id: spinbox;
             width: 50;
