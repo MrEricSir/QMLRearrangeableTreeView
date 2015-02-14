@@ -13,8 +13,8 @@ Rectangle {
     // Subscribe to this signal to know when the list may have changed order.
     signal orderChanged();
 
-    // Sets the number of undraggable items at the top of the list.
-    property int numSpecial: 0;
+    // Sets the number of unmovable items at the top of the list.
+    property int numStationary: 0;
 
     // How much to indent for a folder.
     property int folderIndent: 25;
@@ -130,9 +130,9 @@ Rectangle {
     }
 
     // Given an integer position, this clips it to within the min and max available in the list.
-    // Note that numSpecial is the min!
+    // Note that numStationary is the min!
     function clipPosition(index) {
-        return Math.max(numSpecial, Math.min(rearrangeableDelegate.ListView.view.count - 1, index));
+        return Math.max(numStationary, Math.min(rearrangeableDelegate.ListView.view.count - 1, index));
     }
 
     // (Debug feature) Logs the current model to the console.
@@ -257,7 +257,7 @@ Rectangle {
                 }
 
                 // Out of range (top)
-                if ((positionEnded <= 0 && numSpecial == 0) || newPosition <= numSpecial) {
+                if ((positionEnded <= 0 && numStationary == 0) || newPosition <= numStationary) {
                     return false;
                 }
 
@@ -295,7 +295,7 @@ Rectangle {
             onDoubleClicked: rearrangeableDelegate.doubleClicked();
 
             onPressAndHold: {
-                if (!dragEnabled || index < numSpecial) {
+                if (!dragEnabled || index < numStationary) {
                     return;
                 }
 
@@ -318,7 +318,7 @@ Rectangle {
                 positionEnded = rearrangeableDelegate.y;
 
                 // Special handling if we're at the top.
-                var atTop = numSpecial == 0 && positionEnded <= 0;
+                var atTop = numStationary == 0 && positionEnded <= 0;
 
                 //console.log("Height of list: ", dragDelegateBorder.ListView.view.childrenRect.height)
                 //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
@@ -422,6 +422,7 @@ Rectangle {
 
                     removeDragBorders();
 
+                    var originalIndex = index;
                     var weMoved = false;
 
                     // Our real new position depends on whether we're dropping on top of a
@@ -435,7 +436,7 @@ Rectangle {
                         } else {
                             // We moved!
                             myNewPosition = newPosition;
-                            if (numSpecial == 0 && positionEnded <= 0) {
+                            if (numStationary == 0 && positionEnded <= 0) {
                                 // Special case for top item.
                                 myNewPosition = 0;
                             }
@@ -467,10 +468,9 @@ Rectangle {
                         weMoved = true; // remember
                     }
 
-
                     if (isOnTopOf !== -1 && !isFolder) {
                         // We're on top of another item.
-                        console.log("You dropped it in the middle, dawg: ", isOnTopOf)
+                        //console.log("You dropped it in the middle of: ", isOnTopOf)
                         var onTopOfItem = model.get(isOnTopOf);
 
                         if (onTopOfItem.isFolder && !onTopOfItem.folderOpen) {
@@ -518,7 +518,7 @@ Rectangle {
                             }
 
                             // 2. Perform the move.
-                            for (i = model.count - 1; i > 0 ; i--) {
+                            for (i = model.count - 1; i >= 0 ; i--) {
                                 item = model.get(i);
                                 if (item.parentFolder === uid) {
                                     moveFromTo(i, clipPosition(i + spacesActuallyMoved - (itemsInFolder - 1)));

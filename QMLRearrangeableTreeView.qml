@@ -37,7 +37,7 @@ ApplicationWindow {
 
             // This sets the number of items at the top of the list that can never be reordered
             // or put into folders.
-            numSpecial: 2;
+            numStationary: 2;
 
             onClicked: {
                 console.log("on click")
@@ -147,7 +147,7 @@ ApplicationWindow {
                 Text {
                     id: itemName;
 
-                    text: name + (index < titleDelegate.numSpecial ? " [special]" : "");
+                    text: name + (index < titleDelegate.numStationary ? " [stationary]" : "");
 
                     width: 200
                     height: 30
