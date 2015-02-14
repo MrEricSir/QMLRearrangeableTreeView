@@ -19,7 +19,10 @@ ApplicationWindow {
 
     ListView {
         id: treeView
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.bottom: bottomRow.top
 
         // Only enable scrolling if there's a need.
         interactive: height < childrenRect.height
@@ -37,7 +40,7 @@ ApplicationWindow {
 
             // This sets the number of items at the top of the list that can never be reordered
             // or put into folders.
-            numStationary: 2;
+            numStationary: spinbox.value;
 
             onClicked: {
                 console.log("on click")
@@ -287,6 +290,33 @@ ApplicationWindow {
         // Perform an animation when the list is rearranged.
         displaced: Transition {
             NumberAnimation { properties: "x,y"; duration: 50 }
+        }
+    }
+
+    Row {
+        id: bottomRow;
+
+        anchors.right: parent.right;
+        anchors.left: parent.left;
+        anchors.bottom: parent.bottom;
+        anchors.bottomMargin: 10;
+        anchors.leftMargin: 10;
+        anchors.rightMargin: 10;
+
+        Text {
+            text: "Stationary items:   ";
+            verticalAlignment: Text.AlignVCenter;
+            height: parent.height;
+        }
+
+
+        SpinBox {
+            id: spinbox;
+            width: 50;
+            minimumValue: 0;
+            maximumValue: sampleList.count;
+
+            value: 0;
         }
     }
 }
