@@ -42,6 +42,11 @@ ApplicationWindow {
             // or put into folders.
             numStationary: spinbox.value;
 
+            // Style the opener.
+            openerImage: "opener.png";
+            openerOffsetX: 5;
+            openerOffsetY: 2;
+
             onClicked: {
                 console.log("on click")
                 treeView.currentIndex = index;
@@ -59,93 +64,6 @@ ApplicationWindow {
 
             // Draw the opener, title in a row with uid and parentUID (for debugging)
             Row {
-
-                // This is the opener, you'll want to restyle this however you like.
-                Item {
-                    id: opener
-
-                    visible: isFolder
-
-                    width: 30
-                    height: 30
-
-                    Image {
-                        id: openerIcon
-
-                        source: "opener.png"
-
-                        x: 5
-                        y: 2
-
-                        width: 20
-                        height: 20
-
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-
-                        states: [
-                            State { name: "open"; },
-                            State { name: "closed"; }
-                        ]
-
-                        state: folderOpen ? "open" : "closed";
-
-                        // Animate the opener with a quick rotation.
-                        transitions: [
-                            Transition {
-                                from: "*";
-                                to: "closed";
-                                RotationAnimation {
-                                    running: false;
-                                    direction: RotationAnimation.Counterclockwise;
-
-                                    target: openerIcon;
-                                    to: -90;
-                                    duration: 250;
-
-                                    // Supress warning message.
-                                    property: "rotation";
-                                }
-                            },
-                            Transition {
-                                from: "*";
-                                to: "open";
-                                RotationAnimation {
-                                    running: false;
-                                    direction: RotationAnimation.Clockwise;
-
-                                    target: openerIcon;
-                                    to: 0;
-                                    duration: 250;
-
-                                    // Supress warning message.
-                                    property: "rotation";
-                                }
-                            }
-                        ]
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent;
-
-                        onClicked: {
-                            console.log("opener changing folder state")
-
-                            // Open/close children.
-                            var listModel = titleDelegate.ListView.view.model;
-                            for (var i = index + 1; i < listModel.count; i++) {
-                                if (listModel.get(i).parentFolder !== uid) {
-                                    break;
-                                }
-
-                                setMyProperty(i, "folderOpen", !folderOpen);
-                            }
-
-                            // Open/close self.
-                            setMyProperty(index, "folderOpen", !folderOpen);
-                        }
-                    }
-                }
 
                 Text {
                     id: itemName;

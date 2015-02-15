@@ -6,6 +6,8 @@ import QtQuick 2.4
 Rectangle {
     id: rearrangeableDelegate;
 
+    // PUBLIC:
+
     // Don't use a MouseArea!!  Instead, use these signals to find when the item is clicked.
     signal clicked();
     signal doubleClicked();
@@ -22,11 +24,19 @@ Rectangle {
     // Drag border color and height.
     property color dragBorderColor: "black";
     property int dragBorderHeight: 1;
+
+    // Enable/disable drag and drop functionality.
     property bool dragEnabled: true;
+
+    // Opener style.
+    property url openerImage;
+    property real openerOffsetX: 0;
+    property real openerOffsetY: 0;
 
     // I put this flag in because I'm using a C++ based list model that's not 100% API compatible
     // with QML's ListModel.  Depending on your list model backend some fiddling may be necessary.
     property bool qmlListModel: true;
+
 
 
     // PRIVATE:
@@ -159,10 +169,103 @@ Rectangle {
         }
 
         Item {
-            id: placeholder;
+            // This is the opener, you'll want to restyle this however you like.
+            Item {
+                id: opener;
 
-            // Show as indented if it's a folder or if we're hovering over it.
-            x: parentFolder >= 0 ? folderIndent : (dropTarget === "hover" ? folderIndent : 0);
+                visible: isFolder;
+
+                width: isFolder ? placeholder.childrenRect.height : 0;
+                height:  placeholder.childrenRect.height;
+
+                Image {
+                    id: openerIcon;
+
+                    source: rearrangeableDelegate.openerImage;
+                    x: rearrangeableDelegate.openerOffsetX;
+                    y: rearrangeableDelegate.openerOffsetY;
+
+                    width: sourceSize.width;
+                    height: sourceSize.height;
+
+                    fillMode: Image.PreserveAspectCrop;
+                    asynchronous: true;
+
+                    states: [
+                        State { name: "open"; },
+                        State { name: "closed"; }
+                    ]
+
+                    state: folderOpen ? "open" : "closed";
+
+                    // Animate the opener with a quick rotation.
+                    transitions: [
+                        Transition {
+                            from: "*";
+                            to: "closed";
+                            RotationAnimation {
+                                running: false;
+                                direction: RotationAnimation.Counterclockwise;
+
+                                target: openerIcon;
+                                to: -90;
+                                duration: 250;
+
+                                // Supress warning message.
+                                property: "rotation";
+                            }
+                        },
+                        Transition {
+                            from: "*";
+                            to: "open";
+                            RotationAnimation {
+                                running: false;
+                                direction: RotationAnimation.Clockwise;
+
+                                target: openerIcon;
+                                to: 0;
+                                duration: 250;
+
+                                // Supress warning message.
+                                property: "rotation";
+                            }
+                        }
+                    ]
+                }
+
+                // Opener MouseArea
+                MouseArea {
+                    anchors.fill: parent;
+
+                    onClicked: {
+                        //console.log("opener changing folder state")
+
+                        // Open/close children.
+                        var listModel = titleDelegate.ListView.view.model;
+                        for (var i = index + 1; i < listModel.count; i++) {
+                            if (listModel.get(i).parentFolder !== uid) {
+                                break;
+                            }
+
+                            setMyProperty(i, "folderOpen", !folderOpen);
+                        }
+
+                        // Open/close self.
+                        setMyProperty(index, "folderOpen", !folderOpen);
+                    }
+                }
+            }
+
+            Item {
+                anchors.left: opener.right
+
+                Item {
+                    id: placeholder;
+
+                    // Show as indented if it's a folder or if we're hovering over it.
+                    x: parentFolder >= 0 ? folderIndent : (dropTarget === "hover" ? folderIndent : 0);
+                }
+            }
         }
 
         Rectangle {
@@ -283,7 +386,7 @@ Rectangle {
             drag.axis: Drag.YAxis;
 
             onClicked: {
-                if (isFolder && mouse.x < 30) {
+                if (isFolder && mouse.x < placeholder.childrenRect.height) {
                     // Bail and let the opener MouseArea handle this.
                     mouse.accepted = false;
                     return;
@@ -544,6 +647,9 @@ Rectangle {
                             }
 
                             setMyProperty(index, "parentFolder", parentFolderUID);
+                        } else if (index == 0 && !isFolder) {
+                            // We dragged a regular item to the top.  Set parent to none.
+                            setMyProperty(index, "parentFolder", -1);
                         }
                     }
 
@@ -558,5 +664,4 @@ Rectangle {
             }
         }
     }
-
 }
