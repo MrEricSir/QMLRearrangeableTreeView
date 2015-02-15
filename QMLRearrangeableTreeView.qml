@@ -126,11 +126,11 @@ ApplicationWindow {
 
                 // Required:
                 uid: 1;              // Unique id (integer)
-                dropTarget: "none";  // Used for drag and drop UI
-                isFolder: false;     // True if there are subfolders, else false
-                parentFolder: -1;    // -1 if not in a subfolder, else the uid of the parent
+                dropTarget: "none";  // Used for drag and drop UI. (Persistence not required.)
+                isFolder: false;     // True if a folder, else false
+                parentFolder: -1;    // -1 if not in a folder, else the uid of the parent
                 folderOpen: true;    // For folders, this indicates whether their children are
-                                     // displayed. For folders, whether they are open or closed.
+                                     // displayed. Otherwise, indicates if visible.
             }
             ListElement {
                 name: "two";
