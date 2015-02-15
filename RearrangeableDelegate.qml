@@ -32,6 +32,7 @@ Rectangle {
     property url openerImage;
     property real openerOffsetX: 0;
     property real openerOffsetY: 0;
+    property int openerAnimationDuration: 250;
 
     // I put this flag in because I'm using a C++ based list model that's not 100% API compatible
     // with QML's ListModel.  Depending on your list model backend some fiddling may be necessary.
@@ -209,7 +210,7 @@ Rectangle {
 
                                 target: openerIcon;
                                 to: -90;
-                                duration: 250;
+                                duration: rearrangeableDelegate.openerAnimationDuration;
 
                                 // Supress warning message.
                                 property: "rotation";
@@ -224,7 +225,7 @@ Rectangle {
 
                                 target: openerIcon;
                                 to: 0;
-                                duration: 250;
+                                duration: rearrangeableDelegate.openerAnimationDuration;
 
                                 // Supress warning message.
                                 property: "rotation";

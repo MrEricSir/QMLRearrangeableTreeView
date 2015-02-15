@@ -46,6 +46,7 @@ ApplicationWindow {
             openerImage: "opener.png";
             openerOffsetX: 5;
             openerOffsetY: 2;
+            openerAnimationDuration: 250;
 
             onClicked: {
                 console.log("on click")
@@ -127,7 +128,7 @@ ApplicationWindow {
                 uid: 1;              // Unique id (integer)
                 dropTarget: "none";  // Used for drag and drop UI
                 isFolder: false;     // True if there are subfolders, else false
-                parentFolder: -1;    // -1 if in a subfolder, else the uid of the parent
+                parentFolder: -1;    // -1 if not in a subfolder, else the uid of the parent
                 folderOpen: true;    // For folders, this indicates whether their children are
                                      // displayed. For folders, whether they are open or closed.
             }
