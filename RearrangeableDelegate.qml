@@ -339,6 +339,23 @@ Rectangle {
                 return position + add;
             }
 
+            // Returns true if the new position is one that we can move between.
+            function isValidInBetweenTarget(newPosition) {
+                /////////////////////////////////////////////////
+                /////////////////////////////////////////////////
+                // TODO: allow folder to be positioned after another folder at bottom
+                /////////////////////////////////////////////////
+                /////////////////////////////////////////////////
+
+                // Can't move onto myself.
+                if (newPosition === index) {
+                    return false;
+                }
+
+                var itemAboveNewPos = model.get(movingUp ? newPosition - 1 : newPosition);
+                return !(isFolder && itemAboveNewPos && (itemAboveNewPos.isFolder || itemAboveNewPos.parentFolder !== -1));
+            }
+
             // Number of spaces moved up/down the list (negative is up, pos is down)
             //
             // Maths: The gist of this calculation is we take the difference in layout pixels,
@@ -499,7 +516,9 @@ Rectangle {
                                 }
                             }
 
-                            drawDnDBorders(pos, "bottom");
+                            if (isValidInBetweenTarget(pos)) {
+                                drawDnDBorders(pos, "bottom");
+                            }
                         }
                     } else if (atTop && index != 0) {
                         // Special handling for top item.
@@ -507,7 +526,7 @@ Rectangle {
                     } else {
                         // Otherwise, just check if it's a different space and draw the
                         // stupid border.
-                        if (index != newPosition) {
+                        if (index != newPosition && isValidInBetweenTarget(newPosition)) {
                             drawDnDBorders(newPosition, "top");
                         }
                     }
@@ -555,14 +574,7 @@ Rectangle {
                     var spacesActuallyMoved = -1;
 
                     // Only move between valid targets.
-                    var itemAboveNewPos = model.get(movingUp ? myNewPosition - 1 : myNewPosition);
-                    if ((myNewPosition === index) ||
-                            /////////////////////////////////////////////////
-                            /////////////////////////////////////////////////
-                            // TODO: allow folder to be positioned after another folder at bottom
-                            /////////////////////////////////////////////////
-                            /////////////////////////////////////////////////
-                        (isFolder && itemAboveNewPos && (itemAboveNewPos.isFolder || itemAboveNewPos.parentFolder !== -1) ) ) {
+                    if (!isValidInBetweenTarget(myNewPosition)) {
                         // We didn't move; snap the rectangle back in place.
                         rearrangeableDelegate.y = positionStarted;
                     } else {
