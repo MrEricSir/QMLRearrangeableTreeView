@@ -8,7 +8,7 @@ On the web at: https://github.com/MrEricSir/QMLRearrangeableTreeView
 
 Features:
 
-* Rearrangeable by long-pressing on an item and dragging it.
+* Rearrangeable by either pressing or long-pressing (configurable) on an item and dragging it.
 * One item can be "selected" with a mouse click.
 * One-level deep folders (similar to iOS home screen folders.)
 * Arbitrary number of stationary items can't be rearranged at the top of the list.
