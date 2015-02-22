@@ -28,6 +28,9 @@ Rectangle {
     // Enable/disable drag and drop functionality.
     property bool dragEnabled: true;
 
+    // Require long press to begin a drag (intended for touch screens.)
+    property bool dragOnLongPress: false;
+
     // Opener style.
     property url openerImage;
     property real openerOffsetX: 0;
@@ -415,7 +418,19 @@ Rectangle {
 
             onDoubleClicked: rearrangeableDelegate.doubleClicked();
 
+            onPressed: {
+                if (!dragOnLongPress) {
+                    beginDrag();
+                }
+            }
+
             onPressAndHold: {
+                if (dragOnLongPress) {
+                    beginDrag();
+                }
+            }
+
+            function beginDrag() {
                 if (!dragEnabled || index < numStationary) {
                     return;
                 }

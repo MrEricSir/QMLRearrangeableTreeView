@@ -48,6 +48,9 @@ ApplicationWindow {
             openerOffsetY: 2;
             openerAnimationDuration: 250;
 
+            // Don't require a long-press to begin drag. (Set to true for mobile, touchscreens, etc.)
+            dragOnLongPress: true;
+
             onClicked: {
                 console.log("on click")
                 treeView.currentIndex = index;
