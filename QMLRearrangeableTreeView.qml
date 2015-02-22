@@ -49,7 +49,7 @@ ApplicationWindow {
             openerAnimationDuration: 250;
 
             // Don't require a long-press to begin drag. (Set to true for mobile, touchscreens, etc.)
-            dragOnLongPress: true;
+            dragOnLongPress: false;
 
             onClicked: {
                 console.log("on click")
