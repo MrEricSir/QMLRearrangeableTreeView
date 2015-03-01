@@ -549,146 +549,151 @@ Rectangle {
             }
 
             onReleased: {
-                // Handle Press & Hold events
-                if (held) {
-                    held = false;
-
-                    rearrangeableDelegate.z = 1;
-                    rearrangeableDelegate.opacity = 1;
-                    rearrangeableDelegate.ListView.view.interactive = true;
-                    dragArea.drag.target = null;
-
-                    removeDragBorders();
-
-                    var originalIndex = index;
-                    var weMoved = false;
-
-                    // Our real new position depends on whether we're dropping on top of a
-                    // list item, or in between two items.
-                    var myNewPosition;
-                    if (isOnTopOf == -1) {
-                        // Drag between two items (or drop back where we started if we haven't moved.)
-                        if (positionEnded == 0 && mouse.y >= 0) {
-                            // We didn't move.
-                            myNewPosition = index;
-                        } else {
-                            // We moved!
-                            myNewPosition = newPosition;
-                            if (numStationary == 0 && positionEnded <= 0) {
-                                // Special case for top item.
-                                myNewPosition = 0;
-                            }
-                        }
-                    } else {
-                        // Drag on top of another item.
-                        myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
-                    }
-
-                    // Assuming this is a move, this represents the number of spaces we actually
-                    // moved when all was said and done.
-                    var spacesActuallyMoved = -1;
-
-                    // Only move between valid targets.
-                    if (!isValidInBetweenTarget(myNewPosition)) {
-                        // We didn't move; snap the rectangle back in place.
-                        rearrangeableDelegate.y = positionStarted;
-                    } else {
-                        // Do the move!
-                        spacesActuallyMoved = myNewPosition - index;
-                        moveTo(myNewPosition);
-                        weMoved = true; // remember
-                    }
-
-                    if (isOnTopOf !== -1 && !isFolder) {
-                        // We're on top of another item.
-                        //console.log("You dropped it in the middle of: ", isOnTopOf)
-                        var onTopOfItem = model.get(isOnTopOf);
-
-                        if (onTopOfItem.isFolder && !onTopOfItem.folderOpen) {
-                            // We're on top of a closed folder.  This is a no-op because we
-                            // don't allow dragging into a closed folder.
-                        } else if (onTopOfItem.isFolder) {
-                             // If we're dropped on top of a folder, add ourselves to the folder.
-                            console.log("dropped on a folder")
-
-                            // BUGFIX: Sometimes the sub item is placed above the folder.  This
-                            //         is a hacky workaround to correct for that case.
-                            if (index === isOnTopOf - 1) {
-                                moveTo(isOnTopOf);
-                            }
-
-                            setMyProperty(index, "parentFolder", onTopOfItem.uid)
-                        } else {
-                            // If we're on top of a regular item, create a new folder.
-                            var createFolderAt = movingUp ? isOnTopOf : isOnTopOf - 1;
-                            createFolder(createFolderAt);
-                        }
-                    } else if (isFolder) {
-                        // I am a folder! Drag my children too!
-                        var item, i;
-
-                        if (!weMoved) {
-                            // noop: We didn't move! Don't do anything.
-                        } else if (spacesActuallyMoved < 0) {
-                            // Move children UP.
-                            for (i = 0; i < model.count; i++) {
-                                item = model.get(i);
-                                if (item.parentFolder === uid) {
-                                    moveFromTo(i, clipPosition(i + spacesActuallyMoved));
-                                }
-                            }
-                        } else {
-                            // Move children DOWN.
-                            // 1. Count the number of items in the folder.
-                            var itemsInFolder = 0;
-                            for (i = 0; i < model.count; i++) {
-                                item = model.get(i);
-                                if (item.parentFolder === uid) {
-                                    itemsInFolder++;
-                                }
-                            }
-
-                            // 2. Perform the move.
-                            for (i = model.count - 1; i >= 0 ; i--) {
-                                item = model.get(i);
-                                if (item.parentFolder === uid) {
-                                    moveFromTo(i, clipPosition(i + spacesActuallyMoved - (itemsInFolder - 1)));
-                                }
-                            }
-                        }
-                    } else {
-                        // We're between two items.  Adjust our parent folder accordingly.
-                        if (index > 0) {
-                            var aboveItem = model.get(index - 1);
-                            var parentFolderUID;
-
-                            if (!aboveItem.folderOpen) {
-                                // If the item above is closed, ignore it and make this a root
-                                // level item.
-                                parentFolderUID = -1;
-                            } else if (aboveItem.isFolder) {
-                                // If the item above is a folder, reparent.
-                                parentFolderUID = aboveItem.uid;
-                            } else {
-                                // Otherwise, set our parent to the same parent as the item above.
-                                parentFolderUID = aboveItem.parentFolder;
-                            }
-
-                            setMyProperty(index, "parentFolder", parentFolderUID);
-                        } else if (index == 0 && !isFolder) {
-                            // We dragged a regular item to the top.  Set parent to none.
-                            setMyProperty(index, "parentFolder", -1);
-                        }
-                    }
-
-                    // If any folders are empty, delete 'em.
-                    clearEmptyFolders();
-
-                    // We emit signal.  Main screen turn on.
-                    orderChanged();
-
+                if (!held) {
                     return;
                 }
+
+                // Reset held status.
+                held = false;
+                dragArea.drag.target = null;
+                rearrangeableDelegate.z = 1;
+                rearrangeableDelegate.opacity = 1;
+                rearrangeableDelegate.ListView.view.interactive = true;
+                removeDragBorders();
+
+                if (!drag.active) {
+                    return;
+                }
+
+                // Handle Press & Hold events
+                var originalIndex = index;
+                var weMoved = false;
+
+                // Our real new position depends on whether we're dropping on top of a
+                // list item, or in between two items.
+                var myNewPosition;
+                if (isOnTopOf == -1) {
+                    // Drag between two items (or drop back where we started if we haven't moved.)
+                    if (positionEnded == 0 && mouse.y >= 0) {
+                        // We didn't move.
+                        myNewPosition = index;
+                    } else {
+                        // We moved!
+                        myNewPosition = newPosition;
+                        if (numStationary == 0 && positionEnded <= 0) {
+                            // Special case for top item.
+                            myNewPosition = 0;
+                        }
+                    }
+                } else {
+                    // Drag on top of another item.
+                    myNewPosition = isOnTopOf + (movingUp ? 1 : -1);
+                }
+
+                // Assuming this is a move, this represents the number of spaces we actually
+                // moved when all was said and done.
+                var spacesActuallyMoved = -1;
+
+                // Only move between valid targets.
+                if (!isValidInBetweenTarget(myNewPosition)) {
+                    // We didn't move; snap the rectangle back in place.
+                    rearrangeableDelegate.y = positionStarted;
+                } else {
+                    // Do the move!
+                    spacesActuallyMoved = myNewPosition - index;
+                    moveTo(myNewPosition);
+                    weMoved = true; // remember
+                }
+
+                if (isOnTopOf !== -1 && !isFolder) {
+                    // We're on top of another item.
+                    //console.log("You dropped it in the middle of: ", isOnTopOf)
+                    var onTopOfItem = model.get(isOnTopOf);
+
+                    if (onTopOfItem.isFolder && !onTopOfItem.folderOpen) {
+                        // We're on top of a closed folder.  This is a no-op because we
+                        // don't allow dragging into a closed folder.
+                    } else if (onTopOfItem.isFolder) {
+                         // If we're dropped on top of a folder, add ourselves to the folder.
+                        console.log("dropped on a folder")
+
+                        // BUGFIX: Sometimes the sub item is placed above the folder.  This
+                        //         is a hacky workaround to correct for that case.
+                        if (index === isOnTopOf - 1) {
+                            moveTo(isOnTopOf);
+                        }
+
+                        setMyProperty(index, "parentFolder", onTopOfItem.uid)
+                    } else {
+                        // If we're on top of a regular item, create a new folder.
+                        var createFolderAt = movingUp ? isOnTopOf : isOnTopOf - 1;
+                        createFolder(createFolderAt);
+                    }
+                } else if (isFolder) {
+                    // I am a folder! Drag my children too!
+                    var item, i;
+
+                    if (!weMoved) {
+                        // noop: We didn't move! Don't do anything.
+                    } else if (spacesActuallyMoved < 0) {
+                        // Move children UP.
+                        for (i = 0; i < model.count; i++) {
+                            item = model.get(i);
+                            if (item.parentFolder === uid) {
+                                moveFromTo(i, clipPosition(i + spacesActuallyMoved));
+                            }
+                        }
+                    } else {
+                        // Move children DOWN.
+                        // 1. Count the number of items in the folder.
+                        var itemsInFolder = 0;
+                        for (i = 0; i < model.count; i++) {
+                            item = model.get(i);
+                            if (item.parentFolder === uid) {
+                                itemsInFolder++;
+                            }
+                        }
+
+                        // 2. Perform the move.
+                        for (i = model.count - 1; i >= 0 ; i--) {
+                            item = model.get(i);
+                            if (item.parentFolder === uid) {
+                                moveFromTo(i, clipPosition(i + spacesActuallyMoved - (itemsInFolder - 1)));
+                            }
+                        }
+                    }
+                } else {
+                    // We're between two items.  Adjust our parent folder accordingly.
+                    if (index > 0) {
+                        var aboveItem = model.get(index - 1);
+                        var parentFolderUID;
+
+                        if (!aboveItem.folderOpen) {
+                            // If the item above is closed, ignore it and make this a root
+                            // level item.
+                            parentFolderUID = -1;
+                        } else if (aboveItem.isFolder) {
+                            // If the item above is a folder, reparent.
+                            parentFolderUID = aboveItem.uid;
+                        } else {
+                            // Otherwise, set our parent to the same parent as the item above.
+                            parentFolderUID = aboveItem.parentFolder;
+                        }
+
+                        setMyProperty(index, "parentFolder", parentFolderUID);
+                    } else if (index == 0 && !isFolder) {
+                        // We dragged a regular item to the top.  Set parent to none.
+                        setMyProperty(index, "parentFolder", -1);
+                    }
+                }
+
+                // If any folders are empty, delete 'em.
+                clearEmptyFolders();
+
+                // We emit signal.  Main screen turn on.
+                orderChanged();
+
+                return;
             }
         }
     }
