@@ -17,6 +17,27 @@ ApplicationWindow {
         return ++uid;
     }
 
+    // Note: You must provide an insertFolder() function to create and insert a folder in your
+    //        model. Chances are you'll want to do something fancier than this in production code.
+    function insertFolder(model, index) {
+        // Generate a unique ID for our new parent folder.
+        var uid = uidNext();
+
+        console.log("insert folder ", index)
+
+        // Create our new folder.
+        model.insert(index, {
+                         "uid": uid,
+                         "title": "New folder",
+                         "dropTarget":"none",
+                         "isFolder":true,
+                         "parentFolder":-1,
+                         "folderOpen": true
+                     });
+
+        return uid;
+    }
+
     ListView {
         id: treeView
         anchors.top: parent.top

@@ -108,18 +108,8 @@ Rectangle {
 
     // Creates a folder at the given space, and consumes the next two items.
     function createFolder(firstItemIndex) {
-        // Generate a unique ID for our new parent folder.
-        var uid = uidNext();
-
-        // Create our new folder.
-        model.insert(firstItemIndex, {
-                         "uid": uid,
-                         "title": "New folder",
-                         "dropTarget":"none",
-                         "isFolder":true,
-                         "parentFolder":-1,
-                         "folderOpen": true
-                     });
+        // Generate and insert the new item.
+        var uid = insertFolder(model, firstItemIndex);
 
         // Consume next two items by poppin' em out!
         for (var i = 1; i < 3; i++) {
