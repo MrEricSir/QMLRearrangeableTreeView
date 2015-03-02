@@ -72,7 +72,7 @@ ApplicationWindow {
                 Text {
                     id: itemName;
 
-                    text: name + (index < titleDelegate.numStationary ? " [stationary]" : "");
+                    text: title + (index < titleDelegate.numStationary ? " [stationary]" : "");
 
                     width: 200
                     height: 30
@@ -125,7 +125,7 @@ ApplicationWindow {
             id: sampleList
 
             ListElement {
-                name: "one";
+                title: "one";
 
                 // Required:
                 uid: 1;              // Unique id (integer)
@@ -136,7 +136,7 @@ ApplicationWindow {
                                      // displayed. Otherwise, indicates if visible.
             }
             ListElement {
-                name: "two";
+                title: "two";
 
                 uid: 2;
                 dropTarget: "none";
@@ -145,7 +145,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "three";
+                title: "three";
 
                 uid: 3;
                 dropTarget: "none";
@@ -154,7 +154,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "four";
+                title: "four";
 
                 uid: 4;
                 dropTarget: "none";
@@ -163,7 +163,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "five";
+                title: "five";
 
                 uid: 5;
                 dropTarget: "none";
@@ -172,7 +172,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "six";
+                title: "six";
 
                 uid: 6;
                 dropTarget: "none";
@@ -181,7 +181,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "seven";
+                title: "seven";
 
                 uid: 7;
                 dropTarget: "none";
@@ -190,7 +190,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "eight";
+                title: "eight";
 
                 uid: 8;
                 dropTarget: "none";
@@ -199,7 +199,7 @@ ApplicationWindow {
                 folderOpen: true;
             }
             ListElement {
-                name: "nine";
+                title: "nine";
 
                 uid: 9;
                 dropTarget: "none";
