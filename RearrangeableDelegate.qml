@@ -72,18 +72,7 @@ Rectangle {
         if (qmlListModel) {
             return model.get(myIndex)[name];
         } else {
-            console.log("UNIMPLEMENTED")
-        }
-    }
-
-    function getItem(myIndex) {
-        //
-        // Note: In C++ the method is "row", but it's called "get" with a QML ListModel.
-        //
-        if (qmlListModel) {
-            return model.get(myIndex);
-        } else {
-            return model.rowAs(myIndex);
+            return model.data(myIndex, name);
         }
     }
 
@@ -120,12 +109,12 @@ Rectangle {
     // Creates a folder at the given space, and consumes the next two items.
     function createFolder(firstItemIndex) {
         // Generate a unique ID for our new parent folder.
-        var uid = app.uidNext();
+        var uid = uidNext();
 
         // Create our new folder.
         model.insert(firstItemIndex, {
                          "uid": uid,
-                         "name": "New folder",
+                         "title": "New folder",
                          "dropTarget":"none",
                          "isFolder":true,
                          "parentFolder":-1,
@@ -146,12 +135,13 @@ Rectangle {
                 // Get UID of current folder.
                 var uid = getMyProperty(i, 'uid');
 
-                var nextItem = i === model.count -1 ? null : getItem(i + 1);
+                // Get index of next item.
+                var nextItem = i + 1;
 
                 // If there's no next item or it's got a different UID for its parent,
                 // the folder is empty and therefore safe to remove.
-                if (nextItem === null || nextItem.parentFolder !== uid) {
-                    console.log('deleting folder')
+                if (nextItem >= model.count || getMyProperty(nextItem, "parentFolder") !== uid) {
+                    //console.log('deleting folder')
                     model.remove(i, 1);
                     if (i > 0) {
                         i--; // Back up one.
@@ -170,7 +160,7 @@ Rectangle {
     // (Debug feature) Logs the current model to the console.
     function logModel() {
         for (var i = 0; i < model.count; i++) {
-            console.log(i, ". ", getMyProperty(i, 'uid'), " ", getMyProperty(i, 'name'),
+            console.log(i, ". ", getMyProperty(i, 'uid'), " ", getMyProperty(i, 'title'),
                         getMyProperty(i, 'folderOpen') ? " " : " [closed] ",
                                                          getMyProperty(i, 'parentFolder'));
         }
@@ -325,30 +315,31 @@ Rectangle {
 
                 var add = 0;
                 var i = index;
-                var item;
 
                 // Skip items in closed folders.
                 if (movingUp) {
                     // We're moving up.
                     while (i >= 0) {
-                        item = getItem(i);
-                        if (!getMyProperty(i, 'folderOpen') && !item.isFolder) {
+                        if (!getMyProperty(i, 'folderOpen') && !getMyProperty(i, 'isFolder')) {
                             // Skip anything inside a closed folder.
                             add -= 1;
-                        } else if (i <= position && item.folderOpen) {
+                        } else if (i <= position && getMyProperty(i, 'folderOpen')) {
                             break;
                         }
 
                         i--;
                     }
                 } else {
+                    if (i < 0) {
+                        i = 0;
+                    }
+
                     // We're moving down.
                     while (i < model.count) {
-                        item = getItem(i);
-                        if (item && !item.folderOpen && !item.isFolder) {
+                        if (!getMyProperty(i, 'folderOpen') && !getMyProperty(i, 'isFolder')) {
                             // Skip anything inside a closed folder.
                             add += 1;
-                        } else if (!item || (i >= position && item.folderOpen)) {
+                        } else if (i >= position && getMyProperty(i, 'folderOpen')) {
                             break;
                         }
 
@@ -373,8 +364,16 @@ Rectangle {
                     return false;
                 }
 
-                var itemAboveNewPos = getItem(movingUp ? newPosition - 1 : newPosition);
-                return !(isFolder && itemAboveNewPos && (itemAboveNewPos.isFolder || itemAboveNewPos.parentFolder !== -1));
+                var itemAboveNewPos = movingUp ? newPosition - 1 : newPosition;
+
+                // Allow dragging above 1st item.
+                if (itemAboveNewPos < 0) {
+                    return true;
+                }
+
+                return !(isFolder &&
+                         (getMyProperty(itemAboveNewPos, 'isFolder') ||
+                          getMyProperty(itemAboveNewPos, 'parentFolder') !== -1));
             }
 
             // Number of spaces moved up/down the list (negative is up, pos is down)
@@ -474,7 +473,7 @@ Rectangle {
                 // Special handling if we're at the top.
                 var atTop = numStationary == 0 && positionEnded <= 0;
 
-                //console.log("Height of list: ", dragDelegateBorder.ListView.view.childrenRect.height)
+                //console.log("Height of list: ", rearrangeableDelegate.ListView.view.childrenRect.height)
                 //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
 
                 // Erase all existing drag borders.
@@ -504,20 +503,20 @@ Rectangle {
 
                     // If we're outside the bounds, this check will fail and we can stop now.
                     if (currentSpace !== clipPosition(currentSpace)) {
-                        console.log("ne clipped!")
+                        //console.log("we clipped!")
                         return;
                     }
 
                     // We're only doing folders one level deep (for now?) so you can't drop on top
                     // of an item that's in a folder.
-                    if (getItem(currentSpace).parentFolder >= 0) {
+                    if (getMyProperty(currentSpace, 'parentFolder') >= 0) {
                         return;
                     }
 
                     //console.log("Currently on top of space: ", currentSpace)
 
                     // Do a hover roll (unless we're on a folder.)
-                    if (!getItem(currentSpace).isFolder) {
+                    if (!getMyProperty(currentSpace, 'isFolder')) {
                         // Set the on top of space.
                         isOnTopOf = currentSpace;
 
@@ -541,9 +540,9 @@ Rectangle {
 
                             // If we're in a closed folder, skip back up to the folder itself because
                             // we can't draw a border on an invisible item.
-                            if (!getItem(pos).folderOpen) {
+                            if (!getMyProperty(pos, 'folderOpen')) {
                                 for (pos; pos >= 0; pos--) {
-                                    if (getItem(pos).isFolder) {
+                                    if (getMyProperty(pos, 'isFolder')) {
                                         break;
                                     }
                                 }
@@ -633,7 +632,7 @@ Rectangle {
                         // don't allow dragging into a closed folder.
                     } else if (getMyProperty(isOnTopOf, 'isFolder')) {
                          // If we're dropped on top of a folder, add ourselves to the folder.
-                        console.log("dropped on a folder")
+                        //console.log("dropped on a folder")
 
                         // BUGFIX: Sometimes the sub item is placed above the folder.  This
                         //         is a hacky workaround to correct for that case.
