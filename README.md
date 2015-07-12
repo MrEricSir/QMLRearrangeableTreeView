@@ -2,6 +2,8 @@
 
 Copyright 2015 Eric Gregory
 
+***WARNING*** As of Qt 5.5 this is obsolete. I haven't had time to backport this yet to the new built-in QML TreeView.
+
 QMLRearrangeableTreeView is a list-based TreeView that can be rearranged with a mouse or touch device.  This was originally built for an RSS reader I'm working on.  Someday maybe there will be a built-in QML component that does this, but alas, that day is not today.  In the meantime I'm giving this code away for free (see the included LICENSE file for details.)
 
 On the web at: https://github.com/MrEricSir/QMLRearrangeableTreeView
