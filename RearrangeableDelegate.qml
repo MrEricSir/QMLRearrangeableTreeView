@@ -1,3 +1,6 @@
+// Original code by Eric Gregory, see LICENSE
+// basic editing and JSON save/load added Oliver Heggelbacher
+
 import QtQuick 2.4
 
 /**
@@ -11,6 +14,7 @@ Rectangle {
     // Don't use a MouseArea!!  Instead, use these signals to find when the item is clicked.
     signal clicked();
     signal doubleClicked();
+	signal rightClicked();
 
     // Subscribe to this signal to know when the list may have changed order.
     signal orderChanged();
@@ -37,12 +41,6 @@ Rectangle {
     property real openerOffsetY: 0;
     property int openerAnimationDuration: 250;
 
-    // I put this flag in because I'm using a C++ based list model that's not 100% API compatible
-    // with QML's ListModel.  Depending on your list model backend some fiddling may be necessary.
-    property bool qmlListModel: true;
-
-
-
     // PRIVATE:
 
     // This allows children to be positioned within the element.
@@ -61,31 +59,15 @@ Rectangle {
         //
         // Note: In C++ the method is "setData", but it's called "setProperty" with a QML ListModel.
         //
-        if (qmlListModel) {
-            model.setProperty(myIndex, name, value);
-        } else {
-            model.setData(myIndex, name, value);
-        }
+		model.setProperty(myIndex, name, value);
     }
 
     function getMyProperty(myIndex, name) {
-        if (qmlListModel) {
-            return model.get(myIndex)[name];
-        } else {
-            return model.data(myIndex, name);
-        }
+		return model.get(myIndex)[name];
     }
 
     function moveFromTo(oldPosition, newPosition) {
-        //
-        // Note: The last parameter is needed for a QML ListModel.  If you're using a C++-based
-        //       model you don't need it..
-        //
-        if (qmlListModel) {
-            model.move(oldPosition, newPosition, 1);
-        } else {
-            model.move(oldPosition, newPosition);
-        }
+		model.move(oldPosition, newPosition, 1);
     }
 
     // Moves this item to a new position.
@@ -152,7 +134,7 @@ Rectangle {
         for (var i = 0; i < model.count; i++) {
             console.log(i, ". ", getMyProperty(i, 'uid'), " ", getMyProperty(i, 'title'),
                         getMyProperty(i, 'folderOpen') ? " " : " [closed] ",
-                                                         getMyProperty(i, 'parentFolder'));
+														 getMyProperty(i, 'parentFolder'));
         }
     }
 
@@ -413,26 +395,36 @@ Rectangle {
 
             drag.axis: Drag.YAxis;
 
-            onClicked: {
-                if (isFolder && mouse.x < placeholder.childrenRect.height) {
+			acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+			onClicked: {
+				if ((mouse.button === Qt.LeftButton) && isFolder && mouse.x < placeholder.childrenRect.height) {
                     // Bail and let the opener MouseArea handle this.
                     mouse.accepted = false;
                     return;
                 }
-
-                rearrangeableDelegate.clicked();
+				if (mouse.button === Qt.LeftButton) {
+					rearrangeableDelegate.clicked();
+				}
+				else {
+					rearrangeableDelegate.rightClicked();
+				}
             }
 
-            onDoubleClicked: rearrangeableDelegate.doubleClicked();
+			onDoubleClicked: {
+				if (mouse.button === Qt.LeftButton) {
+					rearrangeableDelegate.doubleClicked();
+				}
+			}
 
             onPressed: {
-                if (!dragOnLongPress) {
+				if (!dragOnLongPress && (mouse.button === Qt.LeftButton)) {
                     beginDrag();
                 }
             }
 
             onPressAndHold: {
-                if (dragOnLongPress) {
+				if (dragOnLongPress && (mouse.button === Qt.LeftButton)) {
                     beginDrag();
                 }
             }

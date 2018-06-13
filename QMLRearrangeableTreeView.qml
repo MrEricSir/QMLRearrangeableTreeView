@@ -1,15 +1,13 @@
-import QtQuick 2.4
-import QtQuick.Controls 1.3
+// Original code by Eric Gregory, see LICENSE
+// basic editing and JSON save/load added Oliver Heggelbacher
+
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import QtQuick.Window 2.2
 import QtQuick.Dialogs 1.2
+import QtQuick.Layouts 1.3
 
-ApplicationWindow {
-    id: app;
-    title: "QML Rearrangeable Tree View";
-    width: 400;
-    height: 480;
-    color: "#eee";
-
+Rectangle {
     // This is used for generating UIDs for folders. This method is simplistic
     // and isn't intended for production code.
     property int uid: 10;
@@ -38,12 +36,27 @@ ApplicationWindow {
         return uid;
     }
 
+    function removeNode(model, index) {
+        model.remove(index)
+    }
+
+    function jsonParse(datastore) {
+        if (datastore) {
+            treeView.model.clear()
+            var datamodel = JSON.parse(datastore)
+            for (var i = 0; i < datamodel.length; ++i) treeView.model.append(datamodel[i])
+        }
+    }
+
+    function jsonStringify() {
+        var datamodel = []
+        for (var i = 0; i < treeView.model.count; ++i) datamodel.push(treeView.model.get(i))
+        return JSON.stringify(datamodel)
+    }
+
     ListView {
         id: treeView
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.left: parent.left
-        anchors.bottom: bottomRow.top
+        anchors.fill: parent
 
         // Only enable scrolling if there's a need.
         interactive: height < childrenRect.height
@@ -72,9 +85,20 @@ ApplicationWindow {
             // Don't require a long-press to begin drag. (Set to true for mobile, touchscreens, etc.)
             dragOnLongPress: false;
 
+            // basic edit popup title using double click or right click
+            onDoubleClicked: {
+                console.log("on double click")
+                itemNameInput.text = title
+                popupItemName.open()
+            }
+            onRightClicked: {
+                console.log("on right click")
+                itemNameInput.text = title
+                popupItemName.open()
+            }
+
             onClicked: {
                 console.log("on click")
-                treeView.currentIndex = index;
             }
 
             onOrderChanged: {
@@ -100,10 +124,58 @@ ApplicationWindow {
 
                     font.pointSize: 12
                     font.family: "Segoe UI"
-                    renderType: Text.NativeRendering;
 
-                    elide: Text.ElideRight;
                 }
+
+                // Edit title using double click
+                Popup {
+                    id: popupItemName
+                    x: itemName.x - 15
+                    y: itemName.y - 15
+                    width: itemName.width + 30
+                    height: itemName.height + 100
+                    modal: true
+                    focus: true
+                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                    ColumnLayout{
+                        Text {
+                            text: qsTr("Change Name")
+                            font.pixelSize: 12
+                        }
+                        TextInput  {
+                            id: itemNameInput
+                            font.pixelSize: 16
+                            focus: true
+                            onAccepted: {
+                                title = itemNameInput.text
+                                popupItemName.close()
+                            }
+                        }
+                        Rectangle {
+                            height: 15
+                        }
+                        RowLayout {
+                            Button {
+                                id: buttonDelete
+                                text: qsTr("Delete\n(press and hold)")
+                                onPressAndHold: {
+                                    popupItemName.close()
+                                    console.log("delete index " + index)
+                                    removeNode(treeView.model, index)
+                                }
+                            }
+                            Button {
+                                id: buttonOK
+                                text: qsTr("OK\n")
+                                onClicked: {
+                                    title = itemNameInput.text
+                                    popupItemName.close()
+                                }
+                            }
+                        }
+                    }
+                }
+
 
                 Text {
                     id: itemUID;
@@ -255,9 +327,8 @@ ApplicationWindow {
         SpinBox {
             id: spinbox;
             width: 50;
-            minimumValue: 0;
-            maximumValue: sampleList.count;
-
+            from: 0;
+            to: sampleList.count;
             value: 0;
         }
     }
