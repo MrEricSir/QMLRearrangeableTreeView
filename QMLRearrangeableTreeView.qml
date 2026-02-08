@@ -1,17 +1,14 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
 
-ApplicationWindow {
-    id: app;
-    title: "QML Rearrangeable Tree View";
-    width: 400;
-    height: 480;
-    visible: true;
-    color: "#eee";
+Item {
+    id: root;
 
-    // Scale factor for DPI awareness. In production you might bind this to
-    // Screen.devicePixelRatio or a user preference.
+    // Number of items at the top of the list that can never be reordered
+    // or put into folders.
+    property int numStationary: 0;
+
+    // Scale factor for DPI awareness.
     property real scaleFactor: 1.0;
 
     // This is used for generating UIDs for folders. This method is simplistic
@@ -45,10 +42,7 @@ ApplicationWindow {
 
     ScrollView {
         id: scrollView;
-        anchors.top: parent.top;
-        anchors.right: parent.right;
-        anchors.left: parent.left;
-        anchors.bottom: bottomRow.top;
+        anchors.fill: parent;
 
         ListView {
             id: treeView
@@ -69,7 +63,7 @@ ApplicationWindow {
 
                 // This sets the number of items at the top of the list that can never be reordered
                 // or put into folders.
-                numStationary: spinbox.value;
+                numStationary: root.numStationary;
 
                 // Per-item drag control. Items with draggable: false can't be moved regardless
                 // of their position. (Compare with numStationary which is position-based.)
@@ -102,7 +96,7 @@ ApplicationWindow {
 
                 // Folders are always visible, but their children are not.
                 visible: isFolder ? true : (parentFolder == -1 || folderOpen ? true : false);
-                height: visible ? Math.round(30 * app.scaleFactor) : 0;
+                height: visible ? Math.round(30 * root.scaleFactor) : 0;
 
                 ContextMenu.menu: Menu {
                     id: contextMenu;
@@ -130,9 +124,9 @@ ApplicationWindow {
                               + (!draggable ? " [fixed]" : "");
 
                         width: 200
-                        height: Math.round(30 * app.scaleFactor)
+                        height: Math.round(30 * root.scaleFactor)
 
-                        font.pointSize: Math.round(12 * app.scaleFactor)
+                        font.pointSize: Math.round(12 * root.scaleFactor)
 
                         elide: Text.ElideRight;
                     }
@@ -143,11 +137,11 @@ ApplicationWindow {
                         text: uid;
 
                         width: 40
-                        height: Math.round(30 * app.scaleFactor)
+                        height: Math.round(30 * root.scaleFactor)
 
                         color: "gray"
 
-                        font.pointSize: Math.round(12 * app.scaleFactor)
+                        font.pointSize: Math.round(12 * root.scaleFactor)
 
                         elide: Text.ElideRight;
                     }
@@ -158,11 +152,11 @@ ApplicationWindow {
                         text: parentFolder;
 
                         width: 40
-                        height: Math.round(30 * app.scaleFactor)
+                        height: Math.round(30 * root.scaleFactor)
 
                         color: "gray"
 
-                        font.pointSize: Math.round(12 * app.scaleFactor)
+                        font.pointSize: Math.round(12 * root.scaleFactor)
 
                         elide: Text.ElideRight;
                     }
@@ -273,48 +267,6 @@ ApplicationWindow {
             displaced: Transition {
                 NumberAnimation { properties: "x,y"; duration: 50 }
             }
-        }
-    }
-
-    Row {
-        id: bottomRow;
-
-        anchors.right: parent.right;
-        anchors.left: parent.left;
-        anchors.bottom: parent.bottom;
-        anchors.bottomMargin: 10;
-        anchors.leftMargin: 10;
-        anchors.rightMargin: 10;
-
-        spacing: 20;
-
-        Text {
-            text: "Stationary items at top:";
-            verticalAlignment: Text.AlignVCenter;
-            height: parent.height;
-        }
-
-        SpinBox {
-            id: spinbox;
-            width: 50;
-
-            value: 1;
-        }
-
-        Text {
-            text: "Scale:";
-            verticalAlignment: Text.AlignVCenter;
-            height: parent.height;
-        }
-
-        Slider {
-            id: scaleSlider;
-            width: 100;
-            from: 0.5;
-            to: 2.0;
-            value: 1.0;
-
-            onValueChanged: app.scaleFactor = value;
         }
     }
 }

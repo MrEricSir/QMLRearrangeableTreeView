@@ -1,3 +1,4 @@
+#include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -25,8 +26,11 @@ int main(int argc, char *argv[])
 
     engine.loadFromModule("CppDemo", "Main");
 
-    if (engine.rootObjects().isEmpty())
+    if (engine.rootObjects().isEmpty()) {
+        qDebug() << "Cannot continue, no QML object found";
+
         return -1;
+    }
 
     return app.exec();
 }

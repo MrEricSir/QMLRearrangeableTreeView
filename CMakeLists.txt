@@ -27,6 +27,5 @@ endif()
 option(BUILD_EXAMPLES "Build example applications" ${_default_examples})
 
 if(BUILD_EXAMPLES)
-    add_subdirectory(examples/qml_demo)
     add_subdirectory(examples/cpp_demo)
 endif()
