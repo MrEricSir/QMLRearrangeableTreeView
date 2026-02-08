@@ -1,0 +1,9 @@
+<RCC>
+    <qresource>
+        <file>examples/cpp_demo/Main.qml</file>
+        <file>examples/qml_demo/QMLRearrangeableTreeView.qml</file>
+        <file>opener.png</file>
+        <file>QMLRearrangeableTreeView.qmlproject</file>
+        <file>RearrangeableDelegate.qml</file>
+    </qresource>
+</RCC>

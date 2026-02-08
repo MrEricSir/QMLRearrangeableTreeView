@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
-import QtQuick.Dialogs
 
 ApplicationWindow {
     id: app;

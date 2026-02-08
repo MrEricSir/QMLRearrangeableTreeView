@@ -37,8 +37,25 @@ Rectangle {
     property real openerOffsetY: 0;
     property int openerAnimationDuration: 250;
 
-    // I put this flag in because I'm using a C++ based list model that's not 100% API compatible
-    // with QML's ListModel.  Depending on your list model backend some fiddling may be necessary.
+    // Set to false when using a C++ QAbstractListModel backend.
+    // When false, the model must provide the following API:
+    //
+    //   Q_PROPERTY(int count READ count NOTIFY countChanged)
+    //
+    //   Q_INVOKABLE QVariant dataByField(int row, const QString &fieldName) const
+    //   Q_INVOKABLE void setData(int row, const QString &fieldName, QVariant newValue)
+    //   Q_INVOKABLE void move(int from, int to)
+    //   Q_INVOKABLE bool removeRow(int row)
+    //
+    // Required model roles (must appear in roleNames()):
+    //   uid (int), title (QString), isFolder (bool), parentFolder (int),
+    //   folderOpen (bool), dropTarget (QString)
+    //
+    // The parent QML scope must provide an insertFolder(index) function that inserts
+    // a new folder at the given index and returns its UID. Typically this is a thin
+    // wrapper around a Q_INVOKABLE on the model.
+    //
+    // See cpp_demo/ for a complete working example.
     property bool qmlListModel: true;
 
 
@@ -46,7 +63,8 @@ Rectangle {
     // PRIVATE:
 
     // This allows children to be positioned within the element.
-    default property alias contents: placeholder.children;
+    // Uses 'data' rather than 'children' so non-visual objects (e.g. Menus) are accepted too.
+    default property alias contents: placeholder.data;
 
     width: parent ? parent.width : 0;
     height: placeholder.childrenRect.height;
