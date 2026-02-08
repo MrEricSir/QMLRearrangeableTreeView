@@ -1,4 +1,4 @@
-import QtQuick 2.4
+import QtQuick
 
 /**
   * This is a rearrangeable delegate for a simple 1-level folder tree ListView.
@@ -9,8 +9,8 @@ Rectangle {
     // PUBLIC:
 
     // Don't use a MouseArea!!  Instead, use these signals to find when the item is clicked.
-    signal clicked();
-    signal doubleClicked();
+    signal clicked(MouseEvent mouse);
+    signal doubleClicked(MouseEvent mouse);
 
     // Subscribe to this signal to know when the list may have changed order.
     signal orderChanged();
@@ -48,7 +48,7 @@ Rectangle {
     // This allows children to be positioned within the element.
     default property alias contents: placeholder.children;
 
-    width: parent.width;
+    width: parent ? parent.width : 0;
     height: placeholder.childrenRect.height;
 
     color: "transparent";
@@ -72,7 +72,7 @@ Rectangle {
         if (qmlListModel) {
             return model.get(myIndex)[name];
         } else {
-            return model.data(myIndex, name);
+            return model.dataByField(myIndex, name);
         }
     }
 
@@ -109,7 +109,7 @@ Rectangle {
     // Creates a folder at the given space, and consumes the next two items.
     function createFolder(firstItemIndex) {
         // Generate and insert the new item.
-        var uid = insertFolder(model, firstItemIndex);
+        var uid = insertFolder(firstItemIndex);
 
         // Consume next two items by poppin' em out!
         for (var i = 1; i < 3; i++) {
@@ -118,23 +118,27 @@ Rectangle {
     }
 
     // If you drag everything out of a folder, we delete it.
-    // (my pary are with the father who lost his chrilden)
     function clearEmptyFolders() {
-        for (var i = 0; i < model.count; i++) {
+        // Iterate backwards so that removing an item doesn't shift indices
+        // we haven't visited yet.
+        for (var i = model.count - 1; i >= 0; i--) {
             if (getMyProperty(i, 'isFolder')) {
-                // Get UID of current folder.
-                var uid = getMyProperty(i, 'uid');
+                var folderUid = getMyProperty(i, 'uid');
 
-                // Get index of next item.
-                var nextItem = i + 1;
+                // Scan the entire model for children of this folder.
+                var hasChildren = false;
+                for (var j = 0; j < model.count; j++) {
+                    if (j !== i && getMyProperty(j, 'parentFolder') === folderUid) {
+                        hasChildren = true;
+                        break;
+                    }
+                }
 
-                // If there's no next item or it's got a different UID for its parent,
-                // the folder is empty and therefore safe to remove.
-                if (nextItem >= model.count || getMyProperty(nextItem, "parentFolder") !== uid) {
-                    //console.log('deleting folder')
-                    model.remove(i, 1);
-                    if (i > 0) {
-                        i--; // Back up one.
+                if (!hasChildren) {
+                    if (qmlListModel) {
+                        model.remove(i, 1);
+                    } else {
+                        model.removeRow(i);
                     }
                 }
             }
@@ -201,6 +205,13 @@ Rectangle {
 
                     state: folderOpen ? "open" : "closed";
 
+                    Component.onCompleted: {
+                        // When launched, rotate graphic to indicate folder is closed.
+                        if (!folderOpen) {
+                            rotation = -90;
+                        }
+                    }
+
                     // Animate the opener with a quick rotation.
                     transitions: [
                         Transition {
@@ -240,9 +251,7 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent;
 
-                    onClicked: {
-                        //console.log("opener changing folder state")
-
+                    onClicked: (mouse) => {
                         // Open/close children.
                         for (var i = index + 1; i < model.count; i++) {
                             if (getMyProperty(i, 'parentFolder') !== uid) {
@@ -413,25 +422,31 @@ Rectangle {
 
             drag.axis: Drag.YAxis;
 
-            onClicked: {
-                if (isFolder && mouse.x < placeholder.childrenRect.height) {
-                    // Bail and let the opener MouseArea handle this.
-                    mouse.accepted = false;
-                    return;
+            acceptedButtons: Qt.LeftButton | Qt.RightButton;
+
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.LeftButton) {
+                    if (isFolder && mouse.x < placeholder.childrenRect.height) {
+                        // Bail and let the opener MouseArea handle this.
+                        mouse.accepted = false;
+                        return;
+                    }
                 }
 
-                rearrangeableDelegate.clicked();
+                rearrangeableDelegate.clicked(mouse);
             }
 
-            onDoubleClicked: rearrangeableDelegate.doubleClicked();
+            onDoubleClicked: (mouse) => {
+                rearrangeableDelegate.doubleClicked(mouse);
+            }
 
-            onPressed: {
+            onPressed: () => {
                 if (!dragOnLongPress) {
                     beginDrag();
                 }
             }
 
-            onPressAndHold: {
+            onPressAndHold: () => {
                 if (dragOnLongPress) {
                     beginDrag();
                 }
@@ -497,6 +512,11 @@ Rectangle {
                         return;
                     }
 
+                    // Can't drop on top of a stationary item.
+                    if (currentSpace < numStationary) {
+                        return;
+                    }
+
                     // We're only doing folders one level deep (for now?) so you can't drop on top
                     // of an item that's in a folder.
                     if (getMyProperty(currentSpace, 'parentFolder') >= 0) {
@@ -555,7 +575,7 @@ Rectangle {
                 }
             }
 
-            onReleased: {
+            onReleased: () => {
                 if (!held) {
                     return;
                 }
@@ -581,7 +601,7 @@ Rectangle {
                 var myNewPosition;
                 if (isOnTopOf == -1) {
                     // Drag between two items (or drop back where we started if we haven't moved.)
-                    if (positionEnded == 0 && mouse.y >= 0) {
+                    if (positionEnded === positionStarted) {
                         // We didn't move.
                         myNewPosition = index;
                     } else {
