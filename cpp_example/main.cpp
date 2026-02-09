@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
     model.addItem({9, "nine",      false, -1, true, "none", true});
 
     engine.rootContext()->setContextProperty("treeModel", &model);
+    engine.rootContext()->setContextProperty("appTitle", "QML Rearrangeable Tree View (C++ Model)");
+    engine.rootContext()->setContextProperty("appOpenerImage", QStringLiteral("qrc:/opener.png"));
 
     engine.loadFromModule("CppDemo", "Main");
 

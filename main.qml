@@ -3,7 +3,7 @@ import QtQuick.Controls
 
 ApplicationWindow {
     id: app;
-    title: "QML Rearrangeable Tree View";
+    title: typeof appTitle !== "undefined" ? appTitle : "QML Rearrangeable Tree View";
     width: 400;
     height: 480;
     visible: true;
@@ -12,6 +12,8 @@ ApplicationWindow {
     QMLRearrangeableTreeView {
         id: rearrangeableTreeView;
 
+        model: typeof treeModel !== "undefined" ? treeModel : null;
+        openerImage: typeof appOpenerImage !== "undefined" ? appOpenerImage : "opener.png";
         numStationary: bottomToolbar.numStationary;
         scaleFactor: bottomToolbar.scaleFactor;
 

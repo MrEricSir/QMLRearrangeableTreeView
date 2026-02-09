@@ -5,8 +5,11 @@ Item {
     id: root;
 
     // Our list model defaults to the one specified in QML by default. In the C++ project this
-    // is overridden by a C++ implementation.
-    property var model: sampleList;
+    // is overridden by a C++ implementation. Pass null to use the built-in sample data.
+    property var model: null;
+
+    // Resolved model: use the provided model, or fall back to the built-in sample data.
+    readonly property var activeModel: model || sampleList;
 
     // Number of items at the top of the list that can never be reordered
     // or put into folders.
@@ -32,15 +35,15 @@ Item {
     // If the model provides insertFolder(), we use that (C++ models).
     // Otherwise, we create the folder directly (QML ListModel).
     function insertFolder(index) {
-        if (typeof model.insertFolder === "function") {
-            return model.insertFolder(index);
+        if (typeof activeModel.insertFolder === "function") {
+            return activeModel.insertFolder(index);
         }
 
         var uid = uidNext();
 
         console.log("insert folder ", index)
 
-        model.insert(index, {
+        activeModel.insert(index, {
                          "uid": uid,
                          "title": "New folder",
                          "dropTarget":"none",
@@ -69,7 +72,7 @@ Item {
                 openerImage: root.openerImage;
             }
 
-            model: root.model;
+            model: root.activeModel;
 
             // Perform an animation when the list is rearranged.
             displaced: Transition {
