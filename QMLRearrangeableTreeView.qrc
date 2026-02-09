@@ -1,12 +1,11 @@
 <RCC>
     <qresource>
-        <file>cpp_example/Main.qml</file>
+        <file>BottomToolbar.qml</file>
         <file>main.qml</file>
         <file>opener.png</file>
         <file>QMLRearrangeableTreeView.qml</file>
         <file>QMLRearrangeableTreeView.qmlproject</file>
         <file>RearrangeableDelegate.qml</file>
         <file>TitleDelegate.qml</file>
-        <file>BottomToolbar.qml</file>
     </qresource>
 </RCC>

@@ -26,7 +26,11 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appTitle", "QML Rearrangeable Tree View (C++ Model)");
     engine.rootContext()->setContextProperty("appOpenerImage", QStringLiteral("qrc:/opener.png"));
 
-    engine.loadFromModule("CppDemo", "Main");
+    // Add the project root to the import path so the QML engine can find
+    // RearrangeableTreeView/qmldir alongside main.qml.
+    engine.addImportPath(QStringLiteral(PROJECT_ROOT));
+
+    engine.load(QUrl::fromLocalFile(QStringLiteral(PROJECT_ROOT "/main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         qDebug() << "Cannot continue, no QML object found";

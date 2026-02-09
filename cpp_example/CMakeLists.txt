@@ -4,10 +4,16 @@ qt_add_executable(cpp_demo
     TreeModel.cpp
 )
 
+# Point the QML engine at the project root so it can find main.qml and
+# the RearrangeableTreeView/qmldir module for local development.
+target_compile_definitions(cpp_demo PRIVATE
+    PROJECT_ROOT="${CMAKE_SOURCE_DIR}"
+)
+
 qt_add_qml_module(cpp_demo
     URI CppDemo
     VERSION 1.0
-    QML_FILES Main.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 set_source_files_properties(../opener.png PROPERTIES QT_RESOURCE_ALIAS opener.png)

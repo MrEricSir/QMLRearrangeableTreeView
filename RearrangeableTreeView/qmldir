@@ -1,0 +1,5 @@
+module RearrangeableTreeView
+RearrangeableDelegate 1.0 ../RearrangeableDelegate.qml
+TitleDelegate 1.0 ../TitleDelegate.qml
+BottomToolbar 1.0 ../BottomToolbar.qml
+QMLRearrangeableTreeView 1.0 ../QMLRearrangeableTreeView.qml
