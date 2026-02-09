@@ -9,22 +9,22 @@ ApplicationWindow {
     visible: true;
     color: "#eee";
 
-    // Scale factor for DPI awareness. In production you might bind this to
-    // Screen.devicePixelRatio or a user preference.
-    property real scaleFactor: 1.0;
-
     QMLRearrangeableTreeView {
+        id: rearrangeableTreeView;
+
+        numStationary: bottomToolbar.numStationary;
+        scaleFactor: bottomToolbar.scaleFactor;
+
         anchors.top: parent.top;
         anchors.right: parent.right;
         anchors.left: parent.left;
-        anchors.bottom: bottomRow.top;
-
-        numStationary: spinbox.value;
-        scaleFactor: app.scaleFactor;
+        anchors.bottom: bottomToolbar.top;
     }
 
-    Row {
-        id: bottomRow;
+    BottomToolbar {
+        id: bottomToolbar;
+
+        numRows: rearrangeableTreeView.numRows;
 
         anchors.right: parent.right;
         anchors.left: parent.left;
@@ -32,36 +32,5 @@ ApplicationWindow {
         anchors.bottomMargin: 10;
         anchors.leftMargin: 10;
         anchors.rightMargin: 10;
-
-        spacing: 20;
-
-        Text {
-            text: "Stationary items at top:";
-            verticalAlignment: Text.AlignVCenter;
-            height: parent.height;
-        }
-
-        SpinBox {
-            id: spinbox;
-            width: 50;
-
-            value: 1;
-        }
-
-        Text {
-            text: "Scale:";
-            verticalAlignment: Text.AlignVCenter;
-            height: parent.height;
-        }
-
-        Slider {
-            id: scaleSlider;
-            width: 100;
-            from: 0.5;
-            to: 2.0;
-            value: 1.0;
-
-            onValueChanged: app.scaleFactor = value;
-        }
     }
 }

@@ -14,7 +14,10 @@ qt_add_qml_module(rearrangeabletreeview
     URI RearrangeableTreeView
     VERSION 1.0
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/RearrangeableTreeView"
-    QML_FILES RearrangeableDelegate.qml
+    QML_FILES
+        RearrangeableDelegate.qml
+        TitleDelegate.qml
+        BottomToolbar.qml
 )
 
 target_link_libraries(rearrangeabletreeview PUBLIC Qt6::Quick)
@@ -27,5 +30,5 @@ endif()
 option(BUILD_EXAMPLES "Build example applications" ${_default_examples})
 
 if(BUILD_EXAMPLES)
-    add_subdirectory(examples/cpp_demo)
+    add_subdirectory(cpp_example)
 endif()

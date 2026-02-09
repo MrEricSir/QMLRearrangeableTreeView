@@ -11,6 +11,9 @@ Item {
     // Scale factor for DPI awareness.
     property real scaleFactor: 1.0;
 
+    // Number of rows in the model.
+    readonly property alias numRows: treeView.count;
+
     // This is used for generating UIDs for folders. This method is simplistic
     // and isn't intended for production code.
     property int uid: 10;
@@ -50,117 +53,10 @@ Item {
             // Only enable scrolling if there's a need.
             interactive: height < childrenRect.height
 
-            delegate: RearrangeableDelegate {
-                id: titleDelegate
-
-                ListView.onIsCurrentItemChanged: {
-                    if (ListView.isCurrentItem) {
-                        console.log("item selected")
-                    }
-                }
-
-                color: index == treeView.currentIndex ? "#fff" : "transparent";
-
-                // This sets the number of items at the top of the list that can never be reordered
-                // or put into folders.
+            delegate: TitleDelegate {
                 numStationary: root.numStationary;
-
-                // Per-item drag control. Items with draggable: false can't be moved regardless
-                // of their position. (Compare with numStationary which is position-based.)
-                dragEnabled: draggable;
-
-                // Style the opener.
+                scaleFactor: root.scaleFactor;
                 openerImage: "opener.png";
-                openerOffsetX: 5;
-                openerOffsetY: 2;
-                openerAnimationDuration: 250;
-
-                // Don't require a long-press to begin drag. (Set to true for mobile, touchscreens, etc.)
-                dragOnLongPress: false;
-
-                onClicked: (mouse) => {
-                    if (mouse.button === Qt.LeftButton) {
-                        treeView.currentIndex = index;
-                    } else if (mouse.button === Qt.RightButton) {
-                        contextMenu.popup();
-                    }
-                }
-
-                onDoubleClicked: (mouse) => {
-                    console.log("double click on: " + title);
-                }
-
-                onOrderChanged: {
-                    console.log("order changed")
-                }
-
-                // Folders are always visible, but their children are not.
-                visible: isFolder ? true : (parentFolder == -1 || folderOpen ? true : false);
-                height: visible ? Math.round(30 * root.scaleFactor) : 0;
-
-                ContextMenu.menu: Menu {
-                    id: contextMenu;
-
-                    MenuItem {
-                        text: "Rename";
-                        onTriggered: console.log("Rename: " + title);
-                    }
-
-                    MenuItem {
-                        text: "Remove";
-                        visible: draggable;
-                        height: visible ? implicitHeight : 0;
-                        onTriggered: console.log("Remove: " + title);
-                    }
-                }
-
-                // Draw the opener, title in a row with uid and parentUID (for debugging)
-                Row {
-
-                    Text {
-                        id: itemName;
-
-                        text: title + (index < titleDelegate.numStationary ? " [stationary]" : "")
-                              + (!draggable ? " [fixed]" : "");
-
-                        width: 200
-                        height: Math.round(30 * root.scaleFactor)
-
-                        font.pointSize: Math.round(12 * root.scaleFactor)
-
-                        elide: Text.ElideRight;
-                    }
-
-                    Text {
-                        id: itemUID;
-
-                        text: uid;
-
-                        width: 40
-                        height: Math.round(30 * root.scaleFactor)
-
-                        color: "gray"
-
-                        font.pointSize: Math.round(12 * root.scaleFactor)
-
-                        elide: Text.ElideRight;
-                    }
-
-                    Text {
-                        id: itemParentUID;
-
-                        text: parentFolder;
-
-                        width: 40
-                        height: Math.round(30 * root.scaleFactor)
-
-                        color: "gray"
-
-                        font.pointSize: Math.round(12 * root.scaleFactor)
-
-                        elide: Text.ElideRight;
-                    }
-                }
             }
 
             // Some sample data.  This also demonstrates the required properties and their data types.
