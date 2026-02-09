@@ -43,11 +43,11 @@ public:
     // count property
     int count() const;
 
-    // QML-facing API (matches RearrangeableDelegate expectations for qmlListModel: false)
-    Q_INVOKABLE QVariant dataByField(int row, const QString &fieldName) const;
-    Q_INVOKABLE void setData(int row, const QString &fieldName, QVariant newValue);
-    Q_INVOKABLE void move(int from, int to);
-    Q_INVOKABLE bool removeRow(int row);
+    // QML-facing API matches the QML ListModel of ease of use.
+    Q_INVOKABLE QVariantMap get(int row) const;
+    Q_INVOKABLE void setProperty(int row, const QString &name, QVariant value);
+    Q_INVOKABLE void move(int from, int to, int count = 1);
+    Q_INVOKABLE void remove(int row, int count = 1);
     Q_INVOKABLE int insertFolder(int atIndex);
 
     // Convenience for populating from C++
@@ -57,12 +57,12 @@ signals:
     void countChanged();
 
 private:
-    QList<TreeItem> m_items;
-    int m_nextUid = 10;
-
     int roleFromFieldName(const QString &fieldName) const;
     QVariant fieldFromItem(const TreeItem &item, int role) const;
     bool setFieldOnItem(TreeItem &item, int role, const QVariant &value);
+
+    QList<TreeItem> items;
+    int nextUid;
 };
 
 #endif // TREEMODEL_H

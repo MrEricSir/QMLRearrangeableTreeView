@@ -1,40 +1,51 @@
 #include "TreeModel.h"
 
-TreeModel::TreeModel(QObject *parent)
-    : QAbstractListModel(parent)
+TreeModel::TreeModel(QObject *parent) :
+    QAbstractListModel(parent),
+    nextUid(10)
 {
 }
 
 int TreeModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid())
+    if (parent.isValid()) {
         return 0;
-    return m_items.size();
+    }
+
+    return items.size();
 }
 
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() < 0 || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() < 0 || index.row() >= items.size()) {
         return {};
-    return fieldFromItem(m_items.at(index.row()), role);
+    }
+
+    return fieldFromItem(items.at(index.row()), role);
 }
 
 bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (!index.isValid() || index.row() < 0 || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() < 0 || index.row() >= items.size()) {
         return false;
-    if (!setFieldOnItem(m_items[index.row()], role, value))
+    }
+
+    if (!setFieldOnItem(items[index.row()], role, value)) {
         return false;
+    }
+
     emit dataChanged(index, index, {role});
     return true;
 }
 
 bool TreeModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    if (parent.isValid() || row < 0 || count < 1 || row + count > m_items.size())
+    if (parent.isValid() || row < 0 || count < 1 || row + count > items.size()) {
         return false;
+    }
+
     beginRemoveRows(QModelIndex(), row, row + count - 1);
-    m_items.remove(row, count);
+    items.remove(row, count);
     endRemoveRows();
     emit countChanged();
     return true;
@@ -58,57 +69,72 @@ int TreeModel::count() const
     return rowCount();
 }
 
-// ---------------------------------------------------------------------------
-// QML-facing API
-// ---------------------------------------------------------------------------
-
-QVariant TreeModel::dataByField(int row, const QString &fieldName) const
+QVariantMap TreeModel::get(int row) const
 {
-    if (row < 0 || row >= m_items.size())
-        return {};
-    int role = roleFromFieldName(fieldName);
-    if (role < 0)
-        return {};
-    return fieldFromItem(m_items.at(row), role);
+    QVariantMap map;
+    if (row < 0 || row >= items.size()) {
+        return map;
+    }
+
+    const TreeItem &item = items.at(row);
+    map[QStringLiteral("uid")]          = item.uid;
+    map[QStringLiteral("title")]        = item.title;
+    map[QStringLiteral("isFolder")]     = item.isFolder;
+    map[QStringLiteral("parentFolder")] = item.parentFolder;
+    map[QStringLiteral("folderOpen")]   = item.folderOpen;
+    map[QStringLiteral("dropTarget")]   = item.dropTarget;
+    map[QStringLiteral("draggable")]    = item.draggable;
+    return map;
 }
 
-void TreeModel::setData(int row, const QString &fieldName, QVariant newValue)
+void TreeModel::setProperty(int row, const QString &name, QVariant value)
 {
-    if (row < 0 || row >= m_items.size())
+    if (row < 0 || row >= items.size()) {
         return;
-    int role = roleFromFieldName(fieldName);
-    if (role < 0)
+    }
+
+    int role = roleFromFieldName(name);
+    if (role < 0) {
         return;
-    if (!setFieldOnItem(m_items[row], role, newValue))
+    }
+
+    if (!setFieldOnItem(items[row], role, value)) {
         return;
+    }
+
     QModelIndex idx = index(row);
     emit dataChanged(idx, idx, {role});
 }
 
-void TreeModel::move(int from, int to)
+void TreeModel::move(int from, int to, int count)
 {
-    if (from < 0 || from >= m_items.size() || to < 0 || to >= m_items.size() || from == to)
-        return;
+    // Move count items one at a time to match QML ListModel behavior.
+    for (int i = 0; i < count; ++i) {
+        int src = (to > from) ? from : from + i;
+        int dst = (to > from) ? to + i : to + i;
+        if (src < 0 || src >= items.size() || dst < 0 || dst >= items.size() || src == dst) {
+            continue;
+        }
 
-    // beginMoveRows quirk: when moving down, destination must be to + 1
-    // because Qt defines it as "the row the item will end up before."
-    int dest = (to > from) ? to + 1 : to;
-    beginMoveRows(QModelIndex(), from, from, QModelIndex(), dest);
-    m_items.move(from, to);
-    endMoveRows();
+        int dest = (dst > src) ? dst + 1 : dst;
+        beginMoveRows(QModelIndex(), src, src, QModelIndex(), dest);
+        items.move(src, dst);
+        endMoveRows();
+    }
 }
 
-bool TreeModel::removeRow(int row)
+void TreeModel::remove(int row, int count)
 {
-    return removeRows(row, 1);
+    removeRows(row, count);
 }
 
 int TreeModel::insertFolder(int atIndex)
 {
-    if (atIndex < 0 || atIndex > m_items.size())
-        atIndex = m_items.size();
+    if (atIndex < 0 || atIndex > items.size()) {
+        atIndex = items.size();
+    }
 
-    int uid = m_nextUid++;
+    int uid = nextUid++;
     TreeItem folder;
     folder.uid = uid;
     folder.title = QStringLiteral("New folder");
@@ -119,33 +145,26 @@ int TreeModel::insertFolder(int atIndex)
     folder.draggable = true;
 
     beginInsertRows(QModelIndex(), atIndex, atIndex);
-    m_items.insert(atIndex, folder);
+    items.insert(atIndex, folder);
     endInsertRows();
     emit countChanged();
     return uid;
 }
 
-// ---------------------------------------------------------------------------
-// Convenience
-// ---------------------------------------------------------------------------
-
 void TreeModel::addItem(const TreeItem &item)
 {
-    int row = m_items.size();
+    int row = items.size();
     beginInsertRows(QModelIndex(), row, row);
-    m_items.append(item);
+    items.append(item);
     endInsertRows();
 
     // Keep m_nextUid ahead of any manually-added UIDs.
-    if (item.uid >= m_nextUid)
-        m_nextUid = item.uid + 1;
+    if (item.uid >= nextUid) {
+        nextUid = item.uid + 1;
+    }
 
     emit countChanged();
 }
-
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
 
 int TreeModel::roleFromFieldName(const QString &fieldName) const
 {

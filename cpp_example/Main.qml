@@ -10,43 +10,24 @@ ApplicationWindow {
     visible: true;
     color: "#eee";
 
-    // The delegate calls insertFolder(index) via scope resolution.
-    // We forward it to the C++ model.
-    function insertFolder(index) {
-        return treeModel.insertFolder(index);
-    }
+    QMLRearrangeableTreeView {
+        id: rearrangeableTreeView;
 
-    ScrollView {
-        id: scrollView;
+        model: treeModel;
+        openerImage: "qrc:/opener.png";
+        numStationary: bottomToolbar.numStationary;
+        scaleFactor: bottomToolbar.scaleFactor;
+
         anchors.top: parent.top;
         anchors.right: parent.right;
         anchors.left: parent.left;
         anchors.bottom: bottomToolbar.top;
-
-        ListView {
-            id: treeView
-
-            interactive: height < childrenRect.height
-
-            delegate: TitleDelegate {
-                qmlListModel: false;
-                numStationary: bottomToolbar.numStationary;
-                scaleFactor: bottomToolbar.scaleFactor;
-                openerImage: "qrc:/opener.png";
-            }
-
-            model: treeModel;
-
-            displaced: Transition {
-                NumberAnimation { properties: "x,y"; duration: 50 }
-            }
-        }
     }
 
     BottomToolbar {
         id: bottomToolbar;
 
-        numRows: treeView.count;
+        numRows: rearrangeableTreeView.numRows;
 
         anchors.right: parent.right;
         anchors.left: parent.left;

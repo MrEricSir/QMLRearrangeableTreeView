@@ -18,6 +18,7 @@ qt_add_qml_module(rearrangeabletreeview
         RearrangeableDelegate.qml
         TitleDelegate.qml
         BottomToolbar.qml
+        QMLRearrangeableTreeView.qml
 )
 
 target_link_libraries(rearrangeabletreeview PUBLIC Qt6::Quick)

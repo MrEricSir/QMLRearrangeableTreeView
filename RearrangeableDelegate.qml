@@ -6,7 +6,8 @@ import QtQuick
 Rectangle {
     id: rearrangeableDelegate;
 
-    // PUBLIC:
+    // PUBLIC
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     // Don't use a MouseArea!!  Instead, use these signals to find when the item is clicked.
     signal clicked(MouseEvent mouse);
@@ -37,30 +38,8 @@ Rectangle {
     property real openerOffsetY: 0;
     property int openerAnimationDuration: 250;
 
-    // Set to false when using a C++ QAbstractListModel backend.
-    // When false, the model must provide the following API:
-    //
-    //   Q_PROPERTY(int count READ count NOTIFY countChanged)
-    //
-    //   Q_INVOKABLE QVariant dataByField(int row, const QString &fieldName) const
-    //   Q_INVOKABLE void setData(int row, const QString &fieldName, QVariant newValue)
-    //   Q_INVOKABLE void move(int from, int to)
-    //   Q_INVOKABLE bool removeRow(int row)
-    //
-    // Required model roles (must appear in roleNames()):
-    //   uid (int), title (QString), isFolder (bool), parentFolder (int),
-    //   folderOpen (bool), dropTarget (QString)
-    //
-    // The parent QML scope must provide an insertFolder(index) function that inserts
-    // a new folder at the given index and returns its UID. Typically this is a thin
-    // wrapper around a Q_INVOKABLE on the model.
-    //
-    // See cpp_demo/ for a complete working example.
-    property bool qmlListModel: true;
-
-
-
-    // PRIVATE:
+    // PRIVATE
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     // This allows children to be positioned within the element.
     // Uses 'data' rather than 'children' so non-visual objects (e.g. Menus) are accepted too.
@@ -76,34 +55,15 @@ Rectangle {
     property var model: ListView.view.model;
 
     function setMyProperty(myIndex, name, value) {
-        //
-        // Note: In C++ the method is "setData", but it's called "setProperty" with a QML ListModel.
-        //
-        if (qmlListModel) {
-            model.setProperty(myIndex, name, value);
-        } else {
-            model.setData(myIndex, name, value);
-        }
+        model.setProperty(myIndex, name, value);
     }
 
     function getMyProperty(myIndex, name) {
-        if (qmlListModel) {
-            return model.get(myIndex)[name];
-        } else {
-            return model.dataByField(myIndex, name);
-        }
+        return model.get(myIndex)[name];
     }
 
     function moveFromTo(oldPosition, newPosition) {
-        //
-        // Note: The last parameter is needed for a QML ListModel.  If you're using a C++-based
-        //       model you don't need it..
-        //
-        if (qmlListModel) {
-            model.move(oldPosition, newPosition, 1);
-        } else {
-            model.move(oldPosition, newPosition);
-        }
+        model.move(oldPosition, newPosition, 1);
     }
 
     // Moves this item to a new position.
@@ -153,11 +113,7 @@ Rectangle {
                 }
 
                 if (!hasChildren) {
-                    if (qmlListModel) {
-                        model.remove(i, 1);
-                    } else {
-                        model.removeRow(i);
-                    }
+                    model.remove(i, 1);
                 }
             }
         }
@@ -370,11 +326,7 @@ Rectangle {
 
             // Returns true if the new position is one that we can move between.
             function isValidInBetweenTarget(newPosition) {
-                /////////////////////////////////////////////////
-                /////////////////////////////////////////////////
                 // TODO: allow folder to be positioned after another folder at bottom
-                /////////////////////////////////////////////////
-                /////////////////////////////////////////////////
 
                 // Can't move onto myself.
                 if (newPosition === index) {
@@ -496,9 +448,6 @@ Rectangle {
                 // Special handling if we're at the top.
                 var atTop = numStationary == 0 && positionEnded <= 0;
 
-                //console.log("Height of list: ", rearrangeableDelegate.ListView.view.childrenRect.height)
-                //console.log("Position started: ", positionStarted, " ended: ", positionEnded + rearrangeableDelegate.height, " moved: ", spacesMoved);
-
                 // Erase all existing drag borders.
                 removeDragBorders();
 
@@ -526,7 +475,6 @@ Rectangle {
 
                     // If we're outside the bounds, this check will fail and we can stop now.
                     if (currentSpace !== clipPosition(currentSpace)) {
-                        //console.log("we clipped!")
                         return;
                     }
 

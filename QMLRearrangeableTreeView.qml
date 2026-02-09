@@ -4,12 +4,19 @@ import QtQuick.Controls
 Item {
     id: root;
 
+    // Our list model defaults to the one specified in QML by default. In the C++ project this
+    // is overridden by a C++ implementation.
+    property var model: sampleList;
+
     // Number of items at the top of the list that can never be reordered
     // or put into folders.
     property int numStationary: 0;
 
     // Scale factor for DPI awareness.
     property real scaleFactor: 1.0;
+
+    // Path to the opener image.
+    property url openerImage: "opener.png";
 
     // Number of rows in the model.
     readonly property alias numRows: treeView.count;
@@ -21,16 +28,19 @@ Item {
         return ++uid;
     }
 
-    // Note: You must provide an insertFolder() function to create and insert a folder in your
-    //       model. Chances are you'll want to do something fancier than this in production code.
+    // Inserts a folder at the given index and returns its UID.
+    // If the model provides insertFolder(), we use that (C++ models).
+    // Otherwise, we create the folder directly (QML ListModel).
     function insertFolder(index) {
-        // Generate a unique ID for our new parent folder.
+        if (typeof model.insertFolder === "function") {
+            return model.insertFolder(index);
+        }
+
         var uid = uidNext();
 
         console.log("insert folder ", index)
 
-        // Create our new folder.
-        sampleList.insert(index, {
+        model.insert(index, {
                          "uid": uid,
                          "title": "New folder",
                          "dropTarget":"none",
@@ -56,113 +66,115 @@ Item {
             delegate: TitleDelegate {
                 numStationary: root.numStationary;
                 scaleFactor: root.scaleFactor;
-                openerImage: "opener.png";
+                openerImage: root.openerImage;
             }
 
-            // Some sample data.  This also demonstrates the required properties and their data types.
-            model: ListModel {
-                id: sampleList
-
-                ListElement {
-                    title: "All Items";
-
-                    // Required:
-                    uid: 1;              // Unique id (integer)
-                    dropTarget: "none";  // Used for drag and drop UI. (Persistence not required.)
-                    isFolder: false;     // True if a folder, else false
-                    parentFolder: -1;    // -1 if not in a folder, else the uid of the parent
-                    folderOpen: true;    // For folders, this indicates whether their children are
-                                         // displayed. Otherwise, indicates if visible.
-
-                    // Optional:
-                    draggable: false;    // Per-item drag control (e.g. for "special" items)
-                }
-                ListElement {
-                    title: "two";
-
-                    uid: 2;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "three";
-
-                    uid: 3;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "four";
-
-                    uid: 4;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "five";
-
-                    uid: 5;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "six";
-
-                    uid: 6;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "seven";
-
-                    uid: 7;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "eight";
-
-                    uid: 8;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-                ListElement {
-                    title: "nine";
-
-                    uid: 9;
-                    dropTarget: "none";
-                    isFolder: false;
-                    parentFolder: -1;
-                    folderOpen: true;
-                    draggable: true;
-                }
-            }
+            model: root.model;
 
             // Perform an animation when the list is rearranged.
             displaced: Transition {
                 NumberAnimation { properties: "x,y"; duration: 50 }
             }
+        }
+    }
+
+    // Default sample data. This also demonstrates the required properties and their data types.
+    ListModel {
+        id: sampleList
+
+        ListElement {
+            title: "All Items";
+
+            // Required:
+            uid: 1;              // Unique id (integer)
+            dropTarget: "none";  // Used for drag and drop UI. (Persistence not required.)
+            isFolder: false;     // True if a folder, else false
+            parentFolder: -1;    // -1 if not in a folder, else the uid of the parent
+            folderOpen: true;    // For folders, this indicates whether their children are
+                                 // displayed. Otherwise, indicates if visible.
+
+            // Optional:
+            draggable: false;    // Per-item drag control (e.g. for "special" items)
+        }
+        ListElement {
+            title: "two";
+
+            uid: 2;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "three";
+
+            uid: 3;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "four";
+
+            uid: 4;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "five";
+
+            uid: 5;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "six";
+
+            uid: 6;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "seven";
+
+            uid: 7;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "eight";
+
+            uid: 8;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
+        }
+        ListElement {
+            title: "nine";
+
+            uid: 9;
+            dropTarget: "none";
+            isFolder: false;
+            parentFolder: -1;
+            folderOpen: true;
+            draggable: true;
         }
     }
 }
