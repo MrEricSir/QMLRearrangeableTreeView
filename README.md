@@ -19,22 +19,54 @@ On the web at: https://github.com/MrEricSir/QMLRearrangeableTreeView
 
 ## Try It Out
 
-There are two ways to test out the project to see if it meets your needs; with the `qml` tool or with the full `C++` example.
+There are two ways to test out the project to see if it meets your needs; with the `qml` 
+tool or with the full `C++` example.
 
-The easiest way is with the `qml` command line tool. From within the project directory, run this command:
+The easiest way is with the `qml` command line tool. From within the project directory,
+ run this command:
 
-```bash
+````bash
 qml -I . main.qml
-```
+````
 
-In a real world scenario you would use QMLRearrangeableTreeView in a C++ project. Use `cmake` to build the example project.
+In a real world scenario you would use QMLRearrangeableTreeView in a C++ project. Use 
+`cmake` to build the example project.
 
-In your own implementation, look at the `TreeModel` class to see how to create a `QAbstractListModel` that represents your
-list data and expose it to the QML layer.
+
+## Usage Guide
+
+The easiest way to include this in your own project is to add it as a git submodule and 
+include the provided CMakeLists.txt file.
+
+````bash
+git submodule add https://github.com/MrEricSir/QMLRearrangeableTreeView.git
+````                                   
+                                                                                                  
+In your CMakeLists.txt:                                                                               
+
+````cmake
+add_subdirectory(QMLRearrangeableTreeView)                                                                
+target_link_libraries(myapp PRIVATE rearrangeabletreeview)
+````
+
+In your QML:
+
+````qml
+import RearrangeableTreeView
+
+// Inside your custom ListView delegate:
+RearrangeableDelegate {
+    // ...
+}
+````
+
+In your C++ implementation, look at the example `TreeModel` class to see how to create a
+`QAbstractListModel` that represents your list data and expose it to the QML layer.
 
 
 ## Pitching In
 
-Much like the GIFs on every 90's website warned you, this code too is under construction.  If you find a bug feel free to open an issue on GitHub or submit a pull request.
+Much like the GIFs on every 90's website warned you, this code too is under construction.  
+If you find a bug feel free to open an issue on GitHub or submit a pull request.
 
 Contributions are welcome.
