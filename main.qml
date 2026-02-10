@@ -8,32 +8,38 @@ ApplicationWindow {
     width: 400;
     height: 480;
     visible: true;
-    color: "#eee";
+    color: "#ccc";
 
-    QMLRearrangeableTreeView {
-        id: rearrangeableTreeView;
+    Rectangle {
+        anchors.fill: parent;
+        anchors.margins: 15;
+        color: "#eee";
 
-        model: typeof treeModel !== "undefined" ? treeModel : null;
-        openerImage: typeof appOpenerImage !== "undefined" ? appOpenerImage : "opener.png";
-        numStationary: bottomToolbar.numStationary;
-        scaleFactor: bottomToolbar.scaleFactor;
+        QMLRearrangeableTreeView {
+            id: rearrangeableTreeView;
 
-        anchors.top: parent.top;
-        anchors.right: parent.right;
-        anchors.left: parent.left;
-        anchors.bottom: bottomToolbar.top;
-    }
+            model: typeof treeModel !== "undefined" ? treeModel : null;
+            openerImage: typeof appOpenerImage !== "undefined" ? appOpenerImage : "opener.png";
+            numStationary: bottomToolbar.numStationary;
+            scaleFactor: bottomToolbar.scaleFactor;
 
-    BottomToolbar {
-        id: bottomToolbar;
+            anchors.top: parent.top;
+            anchors.right: parent.right;
+            anchors.left: parent.left;
+            anchors.bottom: bottomToolbar.top;
+        }
 
-        numRows: rearrangeableTreeView.numRows;
+        BottomToolbar {
+            id: bottomToolbar;
 
-        anchors.right: parent.right;
-        anchors.left: parent.left;
-        anchors.bottom: parent.bottom;
-        anchors.bottomMargin: 10;
-        anchors.leftMargin: 10;
-        anchors.rightMargin: 10;
+            numRows: rearrangeableTreeView.numRows;
+
+            anchors.right: parent.right;
+            anchors.left: parent.left;
+            anchors.bottom: parent.bottom;
+            anchors.bottomMargin: 10;
+            anchors.leftMargin: 10;
+            anchors.rightMargin: 10;
+        }
     }
 }

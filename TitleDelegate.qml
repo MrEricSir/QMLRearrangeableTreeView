@@ -2,27 +2,27 @@ import QtQuick
 import QtQuick.Controls
 
 RearrangeableDelegate {
-    id: titleDelegate
+    id: titleDelegate;
 
-    property real scaleFactor: 1.0
+    property real scaleFactor: 1.0;
 
-    openerImage: "opener.png"
-    openerOffsetX: 5
-    openerOffsetY: 2
-    openerAnimationDuration: 250
+    openerImage: "opener.png";
+    openerOffsetX: 5;
+    openerOffsetY: 2;
+    openerAnimationDuration: 250;
 
-    dragOnLongPress: false
+    dragOnLongPress: false;
 
-    dragEnabled: draggable
+    dragEnabled: draggable;
 
-    color: index == ListView.view.currentIndex ? "#fff" : "transparent"
+    color: index == ListView.view.currentIndex ? "#fff" : "transparent";
 
-    visible: isFolder ? true : (parentFolder == -1 || folderOpen ? true : false)
-    height: visible ? Math.round(30 * scaleFactor) : 0
+    visible: isFolder ? true : (parentFolder == -1 || folderOpen ? true : false);
+    height: visible ? Math.round(30 * scaleFactor) : 0;
 
     ListView.onIsCurrentItemChanged: {
         if (ListView.isCurrentItem) {
-            console.log("item selected")
+            console.log("item selected");
         }
     }
 
@@ -39,7 +39,7 @@ RearrangeableDelegate {
     }
 
     onOrderChanged: {
-        console.log("order changed")
+        console.log("order changed");
     }
 
     Menu {
@@ -47,14 +47,14 @@ RearrangeableDelegate {
 
         MenuItem {
             text: "Rename";
-            onTriggered: console.log("Rename: " + title);
+            onTriggered: console.log("[Demo] Rename: " + title);
         }
 
         MenuItem {
             text: "Remove";
             visible: draggable;
             height: visible ? implicitHeight : 0;
-            onTriggered: console.log("Remove: " + title);
+            onTriggered: console.log("[Demo] Remove: " + title);
         }
     }
 
@@ -66,11 +66,12 @@ RearrangeableDelegate {
             text: title + (index < titleDelegate.numStationary ? " [stationary]" : "")
                   + (!draggable ? " [fixed]" : "");
 
-            width: 200
-            height: Math.round(30 * titleDelegate.scaleFactor)
+            width: 200;
+            height: Math.round(30 * titleDelegate.scaleFactor);
 
-            font.pointSize: Math.round(12 * titleDelegate.scaleFactor)
+            font.pointSize: Math.round(12 * titleDelegate.scaleFactor);
 
+            verticalAlignment: Text.AlignVCenter;
             elide: Text.ElideRight;
         }
 
@@ -79,13 +80,14 @@ RearrangeableDelegate {
 
             text: uid;
 
-            width: 40
-            height: Math.round(30 * titleDelegate.scaleFactor)
+            width: 40;
+            height: Math.round(30 * titleDelegate.scaleFactor);
 
-            color: "gray"
+            color: "gray";
 
-            font.pointSize: Math.round(12 * titleDelegate.scaleFactor)
+            font.pointSize: Math.round(12 * titleDelegate.scaleFactor);
 
+            verticalAlignment: Text.AlignVCenter;
             elide: Text.ElideRight;
         }
 
@@ -94,13 +96,14 @@ RearrangeableDelegate {
 
             text: parentFolder;
 
-            width: 40
-            height: Math.round(30 * titleDelegate.scaleFactor)
+            width: 40;
+            height: Math.round(30 * titleDelegate.scaleFactor);
 
-            color: "gray"
+            color: "gray";
 
-            font.pointSize: Math.round(12 * titleDelegate.scaleFactor)
+            font.pointSize: Math.round(12 * titleDelegate.scaleFactor);
 
+            verticalAlignment: Text.AlignVCenter;
             elide: Text.ElideRight;
         }
     }

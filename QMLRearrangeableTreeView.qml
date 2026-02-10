@@ -41,7 +41,7 @@ Item {
 
         var uid = uidNext();
 
-        console.log("insert folder ", index)
+        console.log("insert folder ", index);
 
         activeModel.insert(index, {
                          "uid": uid,
@@ -61,10 +61,10 @@ Item {
         anchors.fill: parent;
 
         ListView {
-            id: treeView
+            id: treeView;
 
             // Only enable scrolling if there's a need.
-            interactive: height < childrenRect.height
+            interactive: height < childrenRect.height;
 
             delegate: TitleDelegate {
                 numStationary: root.numStationary;
@@ -83,7 +83,7 @@ Item {
 
     // Default sample data. This also demonstrates the required properties and their data types.
     ListModel {
-        id: sampleList
+        id: sampleList;
 
         ListElement {
             title: "All Items";

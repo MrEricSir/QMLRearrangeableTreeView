@@ -242,7 +242,7 @@ Rectangle {
             }
 
             Item {
-                anchors.left: opener.right
+                anchors.left: opener.right;
 
                 Item {
                     id: placeholder;
