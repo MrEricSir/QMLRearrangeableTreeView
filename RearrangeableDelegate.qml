@@ -562,6 +562,9 @@ Rectangle {
                 var originalIndex = index;
                 var weMoved = false;
 
+                // If dragged a full row past the last item, drop outside any folder.
+                var pastEnd = !movingUp && index + spacesMoved >= model.count;
+
                 // Our real new position depends on whether we're dropping on top of a
                 // list item, or in between two items.
                 var myNewPosition;
@@ -658,7 +661,10 @@ Rectangle {
                         var aboveItemIndex = index - 1;
                         var parentFolderUID;
 
-                        if (!getMyProperty(aboveItemIndex, 'folderOpen')) {
+                        if (pastEnd) {
+                            // Dragged past the end of the list — drop outside any folder.
+                            parentFolderUID = -1;
+                        } else if (!getMyProperty(aboveItemIndex, 'folderOpen')) {
                             // If the item above is closed, ignore it and make this a root
                             // level item.
                             parentFolderUID = -1;
