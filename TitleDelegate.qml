@@ -6,13 +6,11 @@ RearrangeableDelegate {
 
     property real scaleFactor: 1.0;
 
+    property real itemHeight: 30 * scaleFactor;
+
     // Opener style.
     property url openerImage: "opener.png";
-    property real openerOffsetX: 5;
-    property real openerOffsetY: 2;
     property int openerAnimationDuration: 250;
-
-    toggleAreaWidth: isFolder ? Math.round(30 * scaleFactor) : 0;
 
     dragOnLongPress: false;
 
@@ -21,7 +19,7 @@ RearrangeableDelegate {
     color: index == ListView.view.currentIndex ? "#fff" : "transparent";
 
     visible: isFolder ? true : (parentFolder == -1 || folderOpen ? true : false);
-    height: visible ? Math.round(30 * scaleFactor) + _folderTopMargin + _folderBottomMargin : 0;
+    height: visible ? itemHeight + _folderTopMargin + _folderBottomMargin : 0;
 
     ListView.onIsCurrentItemChanged: {
         if (ListView.isCurrentItem) {
@@ -31,8 +29,15 @@ RearrangeableDelegate {
 
     onClicked: (mouse) => {
         if (mouse.button === Qt.LeftButton) {
-            ListView.view.currentIndex = index;
+            // On left click, either open/close the folder or select the item, depending on
+            // where the user clicked.
+            if (isFolder && opener.width > 0 && mouse.x < titleDelegate.x + opener.width) {
+                toggleFolder();
+            } else {
+                ListView.view.currentIndex = index;
+            }
         } else if (mouse.button === Qt.RightButton) {
+            // Open context menu on right click.
             contextMenu.popup();
         }
     }
@@ -66,18 +71,20 @@ RearrangeableDelegate {
 
         visible: isFolder;
 
-        width: titleDelegate.toggleAreaWidth;
-        height: Math.round(30 * titleDelegate.scaleFactor);
+        // Make it a square, but only consume width when visible.
+        width: isFolder ? itemHeight : 0;
+        height: itemHeight;
 
         Image {
             id: openerIcon;
 
             source: titleDelegate.openerImage;
-            x: titleDelegate.openerOffsetX;
-            y: titleDelegate.openerOffsetY;
 
-            width: sourceSize.width;
-            height: sourceSize.height;
+            anchors.fill: parent;
+            anchors.margins: parent.width / 4;
+
+            horizontalAlignment: Image.AlignHCenter;
+            verticalAlignment: Image.AlignVCenter;
 
             fillMode: Image.PreserveAspectCrop;
             asynchronous: true;
@@ -147,7 +154,7 @@ RearrangeableDelegate {
                   + (!draggable ? " [fixed]" : "");
 
             width: 200;
-            height: Math.round(30 * titleDelegate.scaleFactor);
+            height: itemHeight;
 
             font.pointSize: Math.round(12 * titleDelegate.scaleFactor);
 
@@ -161,7 +168,7 @@ RearrangeableDelegate {
             text: uid;
 
             width: 40;
-            height: Math.round(30 * titleDelegate.scaleFactor);
+            height: itemHeight;
 
             color: "gray";
 
@@ -177,7 +184,7 @@ RearrangeableDelegate {
             text: parentFolder;
 
             width: 40;
-            height: Math.round(30 * titleDelegate.scaleFactor);
+            height: itemHeight;
 
             color: "gray";
 

@@ -13,7 +13,10 @@ ApplicationWindow {
     Rectangle {
         anchors.fill: parent;
         anchors.margins: 15;
+        clip: true;
         color: "#eee";
+        radius: 10;
+
 
         QMLRearrangeableTreeView {
             id: rearrangeableTreeView;
@@ -25,9 +28,11 @@ ApplicationWindow {
             folderMargin: bottomToolbar.folderMargin;
 
             anchors.top: parent.top;
+            anchors.topMargin: parent.radius;
             anchors.right: parent.right;
             anchors.left: parent.left;
             anchors.bottom: bottomToolbar.top;
+            clip: true;
         }
 
         BottomToolbar {

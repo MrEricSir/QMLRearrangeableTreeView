@@ -35,9 +35,6 @@ Rectangle {
     // Require long press to begin a drag (intended for touch screens.)
     property bool dragOnLongPress: false;
 
-    // Width of the clickable area that triggers toggleFolder() (set by delegate).
-    property real toggleAreaWidth: 0;
-
     // Toggles the folder open or closed. (Does nothing if it's not a folder.)
     function toggleFolder() {
         if (!isFolder) {
@@ -330,13 +327,6 @@ Rectangle {
             acceptedButtons: Qt.LeftButton | Qt.RightButton;
 
             onClicked: (mouse) => {
-                if (mouse.button === Qt.LeftButton) {
-                    if (isFolder && toggleAreaWidth > 0 && mouse.x < placeholder.x + toggleAreaWidth) {
-                        toggleFolder();
-                        return;
-                    }
-                }
-
                 rearrangeableDelegate.clicked(mouse);
             }
 
