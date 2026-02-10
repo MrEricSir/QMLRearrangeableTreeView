@@ -10,16 +10,10 @@ target_compile_definitions(cpp_demo PRIVATE
     PROJECT_ROOT="${CMAKE_SOURCE_DIR}"
 )
 
-qt_add_qml_module(cpp_demo
-    URI CppDemo
-    VERSION 1.0
-    NO_RESOURCE_TARGET_PATH
-)
-
 set_source_files_properties(../opener.png PROPERTIES QT_RESOURCE_ALIAS opener.png)
 qt_add_resources(cpp_demo "shared_resources"
     PREFIX "/"
     FILES ../opener.png
 )
 
-target_link_libraries(cpp_demo PRIVATE rearrangeabletreeview rearrangeabletreeviewplugin)
+target_link_libraries(cpp_demo PRIVATE rearrangeabletreeview)

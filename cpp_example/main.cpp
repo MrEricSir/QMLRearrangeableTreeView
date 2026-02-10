@@ -1,4 +1,3 @@
-#include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -11,7 +10,7 @@ int main(int argc, char *argv[])
 
     TreeModel model;
 
-    // Sample data matching the QML-only demo.
+    // Sample data.
     model.addItem({1, "All Items", false, -1, true, "none", false});
     model.addItem({2, "two",       false, -1, true, "none", true});
     model.addItem({3, "three",     false, -1, true, "none", true});
@@ -26,15 +25,11 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("appTitle", "QML Rearrangeable Tree View (C++ Model)");
     engine.rootContext()->setContextProperty("appOpenerImage", QStringLiteral("qrc:/opener.png"));
 
-    // Add the project root to the import path so the QML engine can find
-    // RearrangeableTreeView/qmldir alongside main.qml.
+    // Add the project root to the import path and load main.qml from there.
     engine.addImportPath(QStringLiteral(PROJECT_ROOT));
-
     engine.load(QUrl::fromLocalFile(QStringLiteral(PROJECT_ROOT "/main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
-        qDebug() << "Cannot continue, no QML object found";
-
         return -1;
     }
 

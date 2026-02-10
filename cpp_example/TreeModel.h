@@ -33,7 +33,7 @@ public:
 
     explicit TreeModel(QObject *parent = nullptr);
 
-    // QAbstractListModel overrides
+    // QAbstractListModel overrides.
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
@@ -50,7 +50,7 @@ public:
     Q_INVOKABLE void remove(int row, int count = 1);
     Q_INVOKABLE int insertFolder(int atIndex);
 
-    // Convenience for populating from C++
+    // Convenience method used in main.cpp.
     void addItem(const TreeItem &item);
 
 signals:
