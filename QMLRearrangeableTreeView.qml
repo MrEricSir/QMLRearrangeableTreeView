@@ -18,8 +18,11 @@ Item {
     // Scale factor for DPI awareness.
     property real scaleFactor: 1.0;
 
-    // Path to the opener image.
-    property url openerImage: "opener.png";
+    // How much to indent folder contents.
+    property int folderIndent: 25;
+
+    // Vertical margin around folder groups.
+    property int folderMargin: 0;
 
     // Number of rows in the model.
     readonly property alias numRows: treeView.count;
@@ -69,7 +72,8 @@ Item {
             delegate: TitleDelegate {
                 numStationary: root.numStationary;
                 scaleFactor: root.scaleFactor;
-                openerImage: root.openerImage;
+                folderIndent: root.folderIndent;
+                folderMargin: root.folderMargin;
             }
 
             model: root.activeModel;

@@ -5,7 +5,7 @@ import RearrangeableTreeView
 ApplicationWindow {
     id: app;
     title: typeof appTitle !== "undefined" ? appTitle : "QML Rearrangeable Tree View";
-    width: 400;
+    width: 500;
     height: 480;
     visible: true;
     color: "#ccc";
@@ -19,9 +19,10 @@ ApplicationWindow {
             id: rearrangeableTreeView;
 
             model: typeof treeModel !== "undefined" ? treeModel : null;
-            openerImage: typeof appOpenerImage !== "undefined" ? appOpenerImage : "opener.png";
             numStationary: bottomToolbar.numStationary;
             scaleFactor: bottomToolbar.scaleFactor;
+            folderIndent: bottomToolbar.folderIndent;
+            folderMargin: bottomToolbar.folderMargin;
 
             anchors.top: parent.top;
             anchors.right: parent.right;

@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("treeModel", &model);
     engine.rootContext()->setContextProperty("appTitle", "QML Rearrangeable Tree View (C++ Model)");
-    engine.rootContext()->setContextProperty("appOpenerImage", QStringLiteral("qrc:/opener.png"));
 
     // Add the project root to the import path and load main.qml from there.
     engine.addImportPath(QStringLiteral(PROJECT_ROOT));

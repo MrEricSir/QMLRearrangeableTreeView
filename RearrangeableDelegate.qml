@@ -20,7 +20,10 @@ Rectangle {
     property int numStationary: 0;
 
     // How much to indent for a folder.
-    property int folderIndent: 25;
+    property int folderIndent: 0;
+
+    // Vertical margin around folder groups (folder item + its visible children).
+    property int folderMargin: 0;
 
     // Drag border color and height.
     property color dragBorderColor: "black";
@@ -32,11 +35,24 @@ Rectangle {
     // Require long press to begin a drag (intended for touch screens.)
     property bool dragOnLongPress: false;
 
-    // Opener style.
-    property url openerImage;
-    property real openerOffsetX: 0;
-    property real openerOffsetY: 0;
-    property int openerAnimationDuration: 250;
+    // Width of the clickable area that triggers toggleFolder() (set by delegate).
+    property real toggleAreaWidth: 0;
+
+    // Toggles the folder open or closed. (Does nothing if it's not a folder.)
+    function toggleFolder() {
+        if (!isFolder) {
+            return;
+        }
+
+        for (var i = index + 1; i < model.count; i++) {
+            if (getMyProperty(i, 'parentFolder') !== uid) {
+                break;
+            }
+            setMyProperty(i, "folderOpen", !folderOpen);
+        }
+
+        setMyProperty(index, "folderOpen", !folderOpen);
+    }
 
     // PRIVATE
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,9 +62,24 @@ Rectangle {
     default property alias contents: placeholder.data;
 
     width: parent ? parent.width : 0;
-    height: placeholder.childrenRect.height;
+    height: placeholder.childrenRect.height + _folderTopMargin + _folderBottomMargin;
 
     color: "transparent";
+
+    // Folder margin calculations.
+    readonly property real _folderTopMargin: isFolder && folderMargin > 0 ? folderMargin : 0;
+    readonly property real _folderBottomMargin: {
+        if (folderMargin <= 0 || !model) return 0;
+        if (isFolder && !folderOpen) return folderMargin;
+        if (isFolder && folderOpen) return 0;
+        if (parentFolder >= 0 && folderOpen) {
+            if (index + 1 >= model.count ||
+                getMyProperty(index + 1, 'parentFolder') !== parentFolder) {
+                return folderMargin;
+            }
+        }
+        return 0;
+    }
 
     // So we don't have to keep typing this out.
     // Note: For some reason delegate properies can't be aliased, so we use a var here.
@@ -150,107 +181,11 @@ Rectangle {
         }
 
         Item {
-            // This is the opener, you'll want to restyle this however you like.
-            Item {
-                id: opener;
+            id: placeholder;
 
-                visible: isFolder;
-
-                width: isFolder ? placeholder.childrenRect.height : 0;
-                height:  placeholder.childrenRect.height;
-
-                Image {
-                    id: openerIcon;
-
-                    source: rearrangeableDelegate.openerImage;
-                    x: rearrangeableDelegate.openerOffsetX;
-                    y: rearrangeableDelegate.openerOffsetY;
-
-                    width: sourceSize.width;
-                    height: sourceSize.height;
-
-                    fillMode: Image.PreserveAspectCrop;
-                    asynchronous: true;
-
-                    states: [
-                        State { name: "open"; },
-                        State { name: "closed"; }
-                    ]
-
-                    state: folderOpen ? "open" : "closed";
-
-                    Component.onCompleted: {
-                        // When launched, rotate graphic to indicate folder is closed.
-                        if (!folderOpen) {
-                            rotation = -90;
-                        }
-                    }
-
-                    // Animate the opener with a quick rotation.
-                    transitions: [
-                        Transition {
-                            from: "*";
-                            to: "closed";
-                            RotationAnimation {
-                                running: false;
-                                direction: RotationAnimation.Counterclockwise;
-
-                                target: openerIcon;
-                                to: -90;
-                                duration: rearrangeableDelegate.openerAnimationDuration;
-
-                                // Supress warning message.
-                                property: "rotation";
-                            }
-                        },
-                        Transition {
-                            from: "*";
-                            to: "open";
-                            RotationAnimation {
-                                running: false;
-                                direction: RotationAnimation.Clockwise;
-
-                                target: openerIcon;
-                                to: 0;
-                                duration: rearrangeableDelegate.openerAnimationDuration;
-
-                                // Supress warning message.
-                                property: "rotation";
-                            }
-                        }
-                    ]
-                }
-
-                // Opener MouseArea
-                MouseArea {
-                    anchors.fill: parent;
-
-                    onClicked: (mouse) => {
-                        // Open/close children.
-                        for (var i = index + 1; i < model.count; i++) {
-                            if (getMyProperty(i, 'parentFolder') !== uid) {
-                                break;
-                            }
-
-                            setMyProperty(i, "folderOpen", !folderOpen);
-                        }
-
-                        // Open/close self.
-                        setMyProperty(index, "folderOpen", !folderOpen);
-                    }
-                }
-            }
-
-            Item {
-                anchors.left: opener.right;
-
-                Item {
-                    id: placeholder;
-
-                    // Show as indented if it's a folder or if we're hovering over it.
-                    x: parentFolder >= 0 ? folderIndent : (dropTarget === "hover" ? folderIndent : 0);
-                }
-            }
+            // Show as indented if it's in a folder or if we're hovering over it.
+            x: parentFolder >= 0 ? folderIndent : (dropTarget === "hover" ? folderIndent : 0);
+            y: _folderTopMargin;
         }
 
         Rectangle {
@@ -396,9 +331,8 @@ Rectangle {
 
             onClicked: (mouse) => {
                 if (mouse.button === Qt.LeftButton) {
-                    if (isFolder && mouse.x < placeholder.childrenRect.height) {
-                        // Bail and let the opener MouseArea handle this.
-                        mouse.accepted = false;
+                    if (isFolder && toggleAreaWidth > 0 && mouse.x < placeholder.x + toggleAreaWidth) {
+                        toggleFolder();
                         return;
                     }
                 }
