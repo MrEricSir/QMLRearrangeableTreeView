@@ -1,0 +1,11 @@
+<RCC>
+    <qresource>
+        <file>BottomToolbar.qml</file>
+        <file>main.qml</file>
+        <file>opener.png</file>
+        <file>QMLRearrangeableTreeView.qml</file>
+        <file>QMLRearrangeableTreeView.qmlproject</file>
+        <file>RearrangeableDelegate.qml</file>
+        <file>TitleDelegate.qml</file>
+    </qresource>
+</RCC>
