@@ -32,6 +32,9 @@ Rectangle {
     // Enable/disable drag and drop functionality.
     property bool dragEnabled: true;
 
+    // Set to false if your delegate will handle its own mouse events.
+    property alias acceptMouseEvents: dragArea.enabled;
+
     // Require long press to begin a drag (intended for touch screens.)
     property bool dragOnLongPress: false;
 
@@ -208,6 +211,8 @@ Rectangle {
 
             // True if we're moving upwardly.
             property bool movingUp: positionEnded < positionStarted;
+
+            enabled: true;
 
             // Returns an adjusted index that skips over closed folders.
             function folderSkipIndex(newIndex) {
