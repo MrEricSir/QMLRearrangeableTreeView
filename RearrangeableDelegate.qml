@@ -339,14 +339,14 @@ Rectangle {
                 rearrangeableDelegate.doubleClicked(mouse);
             }
 
-            onPressed: () => {
-                if (!dragOnLongPress) {
+            onPressed: (mouse) => {
+                if (!dragOnLongPress && mouse.button === Qt.LeftButton) {
                     beginDrag();
                 }
             }
 
-            onPressAndHold: () => {
-                if (dragOnLongPress) {
+            onPressAndHold: (mouse) => {
+                if (dragOnLongPress && mouse.button === Qt.LeftButton) {
                     beginDrag();
                 }
             }
