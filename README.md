@@ -1,3 +1,5 @@
+<img src="QMLRearrangeableTreeView.png" alt="QMLRearrangeableTreeView screenshot" width="500" height="510" />
+
 # QMLRearrangeableTreeView
 
 Copyright 2026 Eric Gregory
